@@ -1,0 +1,27 @@
+.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-full);
+}
+
+.in {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.out {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+}
+
+.amountIn,
+.amountOut {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.amountIn {
+  color: var(--color-success-text);
+}

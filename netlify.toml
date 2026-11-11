@@ -1,0 +1,16 @@
+# Cabeçalhos e redirecionamentos ficam em public/_headers e public/_redirects.
+[build]
+  command = "corepack enable && pnpm install --frozen-lockfile && pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Homologação (deploy previews e branch "homologacao"): app com dados de teste, sem back-end.
+[context.deploy-preview.environment]
+  VITE_API_MOCK = "true"
+  VITE_API_URL = "/v1"
+
+[context.homologacao.environment]
+  VITE_API_MOCK = "true"
+  VITE_API_URL = "/v1"

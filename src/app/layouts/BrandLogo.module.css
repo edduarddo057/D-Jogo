@@ -1,0 +1,21 @@
+.logo {
+  display: inline-block;
+  height: 4rem;
+}
+
+.logo img {
+  width: auto;
+  height: 100%;
+}
+
+.dark {
+  display: none;
+}
+
+:global([data-theme='dark']) .light {
+  display: none;
+}
+
+:global([data-theme='dark']) .dark {
+  display: block;
+}

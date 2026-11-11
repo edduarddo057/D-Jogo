@@ -1,0 +1,3 @@
+.title {
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+}

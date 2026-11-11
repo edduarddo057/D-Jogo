@@ -1,0 +1,21 @@
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 56rem;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: calc(var(--space-6) + env(safe-area-inset-top)) max(var(--space-5), env(safe-area-inset-right))
+    calc(var(--space-8) + env(safe-area-inset-bottom)) max(var(--space-5), env(safe-area-inset-left));
+}
+
+.flow:focus {
+  outline: none;
+}
+
+@media (width >= 48em) {
+  .flow {
+    padding-top: var(--space-12);
+  }
+}

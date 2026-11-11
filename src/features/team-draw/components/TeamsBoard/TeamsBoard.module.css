@@ -1,0 +1,135 @@
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.hint {
+  font-size: var(--text-body-sm-size);
+  color: var(--color-text-muted);
+}
+
+.teams {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (width >= 40em) {
+  .teams {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.team {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--ring-border);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 0.4rem solid var(--team-color);
+}
+
+.tone1 {
+  --team-color: var(--color-avatar-1);
+}
+
+.tone2 {
+  --team-color: var(--color-avatar-2);
+}
+
+.tone3 {
+  --team-color: var(--color-avatar-3);
+}
+
+.tone4 {
+  --team-color: var(--color-avatar-4);
+}
+
+.name {
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+}
+
+.level {
+  font-size: var(--text-caption-size);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.members {
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 5.2rem;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+}
+
+.button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--color-surface-sunken);
+}
+
+.button:focus-visible {
+  outline: 0.3rem solid var(--color-focus);
+  outline-offset: -0.2rem;
+}
+
+.selected,
+.selected:hover {
+  background: var(--color-accent-soft);
+  outline: 0.2rem solid var(--color-accent-text);
+  outline-offset: -0.2rem;
+}
+
+.mine {
+  background: var(--color-accent-soft);
+}
+
+.reserve {
+  opacity: 0.75;
+}
+
+.who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.player {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.me {
+  font-weight: 400;
+  color: var(--color-accent-text);
+}
+
+.meta {
+  font-size: var(--text-caption-size);
+  color: var(--color-text-muted);
+}

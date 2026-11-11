@@ -1,0 +1,66 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--ring-border);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.icon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+}
+
+.success .icon {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.warning .icon {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.info .icon {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
+.danger .icon {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.title {
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+}
+
+.text {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (width >= 40em) {
+  .actions {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  }
+}

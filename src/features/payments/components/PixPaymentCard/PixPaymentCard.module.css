@@ -1,0 +1,79 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--ring-border);
+}
+
+.done {
+  align-items: center;
+  text-align: center;
+  color: var(--color-success-text);
+}
+
+.title {
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+  color: var(--color-text);
+}
+
+.amountBlock,
+.pix {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font: var(--text-label-weight) var(--text-label-size) / var(--text-label-line) var(--font-sans);
+  color: var(--color-text-muted);
+}
+
+.amount {
+  font: var(--text-money-weight) var(--text-money-size) / var(--text-money-line) var(--font-display);
+}
+
+.key {
+  overflow-wrap: anywhere;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  font: 600 var(--text-body-lg-size) / var(--text-body-lg-line) var(--font-sans);
+  user-select: all;
+}
+
+.muted {
+  font-size: var(--text-body-sm-size);
+  color: var(--color-text-muted);
+}
+
+.deadline,
+.reported,
+.rejected {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
+.deadline svg,
+.reported svg,
+.rejected svg {
+  flex: none;
+  margin-top: 0.2rem;
+}
+
+.urgent {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.rejected {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}

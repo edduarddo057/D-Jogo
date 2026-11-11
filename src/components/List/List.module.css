@@ -1,0 +1,133 @@
+.list {
+  margin: 0;
+  padding: var(--space-1) var(--space-5);
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-border);
+}
+
+.target {
+  display: grid;
+  grid-template-areas:
+    'lead body chev'
+    'lead trail chev';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-4);
+  width: 100%;
+  min-height: 7.2rem;
+  padding: var(--space-3) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+a.target,
+button.target {
+  cursor: pointer;
+}
+
+a.target:focus-visible,
+button.target:focus-visible {
+  outline-offset: -0.2rem;
+  border-radius: var(--radius-md);
+}
+
+.leading {
+  display: flex;
+  grid-area: lead;
+}
+
+.trailing {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: trail;
+  gap: var(--space-2);
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+.body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.title,
+.meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title {
+  font: var(--text-body-strong-weight) var(--text-body-strong-size) / var(--text-body-strong-line) var(--font-sans);
+}
+
+.meta {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  grid-area: chev;
+  gap: var(--space-1);
+}
+
+.chevron {
+  grid-area: chev;
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.dateTile {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: var(--radius-full);
+  color: var(--color-control-thumb);
+  font: 800 1.8rem / 1 var(--font-display);
+}
+
+.tone1 {
+  background: var(--color-avatar-1);
+}
+
+.tone2 {
+  background: var(--color-avatar-2);
+}
+
+.tone3 {
+  background: var(--color-avatar-3);
+}
+
+.tone4 {
+  background: var(--color-avatar-4);
+}
+
+@media (width >= 48em) {
+  .target {
+    grid-template-areas: 'lead body trail chev';
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .trailing {
+    justify-self: end;
+    margin-top: 0;
+  }
+}

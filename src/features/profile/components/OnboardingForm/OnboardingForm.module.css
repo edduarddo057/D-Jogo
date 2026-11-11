@@ -1,0 +1,37 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.terms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  cursor: pointer;
+}
+
+.check input {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  margin: 0.1rem 0 0;
+  accent-color: var(--color-primary);
+}
+
+.check a {
+  color: var(--color-accent-text);
+}
+
+.error {
+  font: var(--text-label-weight) var(--text-label-size) / var(--text-label-line) var(--font-sans);
+  color: var(--color-danger-text);
+}

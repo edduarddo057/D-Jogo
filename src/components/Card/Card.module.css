@@ -1,0 +1,80 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.md {
+  padding: var(--space-4) var(--space-5);
+}
+
+.lg {
+  padding: var(--space-6);
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-6);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-xl);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+  isolation: isolate;
+}
+
+/* No escuro o card de marca fica perto do fundo: a borda separa */
+:global([data-theme='dark']) .hero {
+  border-color: var(--color-border);
+}
+
+.ring {
+  position: absolute;
+  top: -7rem;
+  right: -7rem;
+  width: 22rem;
+  height: 22rem;
+  border: 4rem solid var(--color-on-brand-accent);
+  border-radius: var(--radius-full);
+  opacity: 0.12;
+}
+
+/* conteúdo acima do anel decorativo */
+.hero > :not(.ring) {
+  position: relative;
+}
+
+.eyebrow {
+  font: var(--text-overline-weight) var(--text-overline-size) / var(--text-overline-line) var(--font-sans);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-brand-accent);
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.heroTitle {
+  font: var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
+  letter-spacing: var(--text-title-lg-tracking);
+}
+
+.heroMeta {
+  color: var(--color-on-brand-muted);
+}
+
+.heroBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
