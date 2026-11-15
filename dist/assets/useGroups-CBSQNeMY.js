@@ -1,0 +1,1 @@
+import{j as e}from"./index-C2R69H8y.js";import{i as t,r as n,t as r}from"./groupKeys-BjYzpglb.js";function i(){return e({queryKey:r.mine,queryFn:t})}function a(t){return e({queryKey:r.detail(t),queryFn:()=>n(t)})}var o=(e,t)=>e?.permissions.includes(t)??!1;export{a as n,i as r,o as t};

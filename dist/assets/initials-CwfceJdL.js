@@ -1,0 +1,1 @@
+function e(e){let t=e.trim().split(/\s+/).filter(e=>!/^(d[aeo]s?|e)$/i.test(e));if(t.length===0)return`?`;let n=t[0]??``;if(t.length===1)return n.slice(0,2).toUpperCase();let r=t[t.length-1]??``;return`${n.charAt(0)}${r.charAt(0)}`.toUpperCase()}function t(e){let t=0;for(let n=0;n<e.length;n+=1)t=t*31+e.charCodeAt(n)>>>0;return t%4+1}export{e as n,t};

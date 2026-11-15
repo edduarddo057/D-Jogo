@@ -1,0 +1,1 @@
+var e={tab:`_tab_15fv0_1`,summary:`_summary_15fv0_7`,section:`_section_15fv0_20`,sectionTitle:`_sectionTitle_15fv0_26`,leave:`_leave_15fv0_30`};export{e as t};

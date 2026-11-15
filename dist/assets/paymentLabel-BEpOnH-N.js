@@ -1,0 +1,1 @@
+var e=[`jan`,`fev`,`mar`,`abr`,`mai`,`jun`,`jul`,`ago`,`set`,`out`,`nov`,`dez`],t=t=>t.kind===`monthly_fee`&&t.referenceMonth?`Mensalidade ${e[Number(t.referenceMonth.slice(5))-1]??``}/${t.referenceMonth.slice(2,4)}`:`Avulso`;export{t};
