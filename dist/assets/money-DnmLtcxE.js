@@ -1,1 +1,0 @@
-var e=new Intl.NumberFormat(`pt-BR`,{style:`currency`,currency:`BRL`});function t(t){return e.format(t/100).replace(/\u00a0/g,` `)}function n(e){let t=e.replace(/[R$\s]/g,``).replace(/\./g,``).replace(`,`,`.`);return t===``||!/^\d+(\.\d{0,2})?$/.test(t)?null:Math.round(Number.parseFloat(t)*100)}export{n,t};

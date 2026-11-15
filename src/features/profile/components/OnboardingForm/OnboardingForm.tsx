@@ -65,11 +65,11 @@ export function OnboardingForm({ defaultName = '' }: { defaultName?: string }) {
             />
             <span>
               Li e aceito os{' '}
-              <a href="/termos" target="_blank">
+              <a href={`${import.meta.env.BASE_URL}termos`} target="_blank">
                 termos de uso
               </a>{' '}
               e a{' '}
-              <a href="/privacidade" target="_blank">
+              <a href={`${import.meta.env.BASE_URL}privacidade`} target="_blank">
                 política de privacidade
               </a>
               .

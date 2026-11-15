@@ -1,1 +1,0 @@
-var e={all:[`matches`],detail:t=>[...e.all,`detail`,t],byGroup:(t,n)=>[...e.all,`group`,t,n],mine:t=>[...e.all,`mine`,t]};export{e as t};

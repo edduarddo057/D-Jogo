@@ -15,7 +15,7 @@ export function App() {
     setupHttp(client);
     return client;
   });
-  const [router] = useState(() => createBrowserRouter(routes));
+  const [router] = useState(() => createBrowserRouter(routes, { basename: import.meta.env.BASE_URL }));
 
   useEffect(() => watchSystemTheme(), []);
 

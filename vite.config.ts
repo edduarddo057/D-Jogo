@@ -8,8 +8,13 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const withMocks = command === 'serve' || env.VITE_API_MOCK === 'true';
+  // GitHub Pages publica em https://<usuário>.github.io/D-Jogo/. Dev e testes continuam na raiz.
+  // Outra hospedagem na raiz do domínio (Vercel, Netlify, Cloudflare): BASE_PATH=/ pnpm build
+  const base = command === 'build' ? (process.env.BASE_PATH ?? '/D-Jogo/') : '/';
+  const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
   return {
+    base,
     // msw/vite só serve o script do worker (/mockServiceWorker.js); quem liga os mocks é src/app/enableMocks.ts.
     // Fica fora do build de produção quando os mocks estão desligados.
     plugins: [
@@ -21,30 +26,33 @@ export default defineConfig(({ command, mode }) => {
         injectRegister: false,
         includeAssets: ['favicon.svg', 'favicon-32x32.png', 'apple-touch-icon.png', 'brand/*.svg'],
         manifest: {
-          id: '/',
+          id: base,
           name: 'Dá Jogo',
           short_name: 'Dá Jogo',
           description: 'Junta a galera, organiza a turma e fecha o time.',
           lang: 'pt-BR',
           dir: 'ltr',
-          start_url: '/',
-          scope: '/',
+          start_url: base,
+          scope: base,
           display: 'standalone',
           orientation: 'portrait',
           background_color: '#142a40',
           theme_color: '#142a40',
           categories: ['sports', 'social', 'lifestyle'],
           icons: [
-            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: '/maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
           // App shell + fontes do app (só subconjuntos latinos). Respostas da API NÃO entram no cache (F15).
           globPatterns: ['**/*.{js,css,html,svg,png}', 'assets/*latin*.woff2'],
-          navigateFallback: '/index.html',
-          navigateFallbackDenylist: [/^\/mockServiceWorker\.js$/, /^\/api\//],
+          navigateFallback: `${base}index.html`,
+          navigateFallbackDenylist: [
+            new RegExp(`^${escapedBase}mockServiceWorker\\.js$`),
+            new RegExp(`^${escapedBase}api/`),
+          ],
           cleanupOutdatedCaches: true,
         },
         devOptions: { enabled: false },

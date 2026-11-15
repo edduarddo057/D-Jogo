@@ -17,7 +17,7 @@ export function Splash() {
   return (
     // Igual à abertura estática do index.html (public/splash.css), para a troca não piscar
     <div id="splash" role="status" aria-label="Abrindo o Dá Jogo">
-      <img src="/brand/logo-on-dark.svg" alt="" width="300" height="91" />
+      <img src={`${import.meta.env.BASE_URL}brand/logo-on-dark.svg`} alt="" width="300" height="91" />
     </div>
   );
 }

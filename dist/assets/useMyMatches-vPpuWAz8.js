@@ -1,1 +1,0 @@
-import{j as e}from"./index-C2R69H8y.js";import{a as t}from"./matchesApi-CMwzADt9.js";import{t as n}from"./matchKeys-BzxruQbE.js";function r(r=`upcoming`){return e({queryKey:n.mine(r),queryFn:()=>t(r)})}export{r as t};

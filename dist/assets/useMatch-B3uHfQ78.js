@@ -1,1 +1,0 @@
-import{j as e}from"./index-C2R69H8y.js";import{r as t}from"./matchesApi-CMwzADt9.js";import{t as n}from"./matchKeys-BzxruQbE.js";var r=2e4;function i(i){return e({queryKey:n.detail(i),queryFn:()=>t(i),refetchInterval:r,refetchIntervalInBackground:!1})}export{i as n,r as t};
