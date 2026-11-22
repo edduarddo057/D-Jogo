@@ -1,6 +1,7 @@
-import { Search } from 'lucide-react';
+import { Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/Button';
 import { List, ListItem } from '@/components/List';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { Section } from '@/components/Section';
@@ -16,7 +17,9 @@ import {
   type Member,
   type MembershipType,
 } from '@/features/groups';
+import { AddPersonForm } from '@/features/demo';
 import { positionLabels, useSports } from '@/features/profile';
+import { isDemoActive } from '@/lib/demo';
 import { monthName } from '@/lib/format';
 import { toast } from '@/stores';
 import styles from './OrganizerGroupPage.module.css';
@@ -34,6 +37,8 @@ export function MembersTab({ group }: { group: Group }) {
   const sports = useSports();
   const sheet = useSheetParam('membro');
   const [q, setQ] = useState('');
+  const [adding, setAdding] = useState(false);
+  const demo = isDemoActive();
   if (members.isPending) return <SkeletonList rows={5} />;
   const all = members.data ?? [];
   const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -59,6 +64,12 @@ export function MembersTab({ group }: { group: Group }) {
 
   return (
     <>
+      {/* Demonstração: incluir alguém só pelo nome, sem conta nem convite */}
+      {demo && (
+        <Button variant="tint" block icon={<UserPlus size={20} aria-hidden="true" />} onClick={() => setAdding(true)}>
+          Adicionar pessoa
+        </Button>
+      )}
       <div className={styles.search}>
         <Search size={18} aria-hidden="true" className={styles.searchIcon} />
         <TextField
@@ -85,6 +96,20 @@ export function MembersTab({ group }: { group: Group }) {
           <p className={styles.muted}>Nenhum avulso{q ? ' com esse nome' : ''}.</p>
         )}
       </Section>
+      {demo && (
+        <Sheet open={adding} onClose={() => setAdding(false)} title="Adicionar pessoa" closeLabel="Fechar">
+          <AddPersonForm
+            groupId={group.id}
+            sportId={group.sportId}
+            onAdded={(m) => {
+              toast(`${m.user.name.split(' ')[0]} entrou na turma e está confirmado no próximo jogo.`, {
+                tone: 'success',
+              });
+              setAdding(false);
+            }}
+          />
+        </Sheet>
+      )}
       {selected && (
         <MemberSheet
           key={selected.id}

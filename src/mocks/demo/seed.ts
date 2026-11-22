@@ -7,7 +7,7 @@ import { allNotificationsOn, defaultRules } from '../db';
  * (chegada, sorteio, placar, resultado, resumo, mural e estatísticas). Para mudar os jogadores, edite
  * DEMO_PLAYERS. Ninguém aqui tem conta: tudo vive no aparelho (src/lib/demo).
  */
-export const DEMO_OWNER = { id: 'demo_voce', name: 'Você (organizador)', nickname: 'voce', position: 'setter' };
+export const DEMO_OWNER = { id: 'demo_voce', name: 'Organizador Demo', nickname: 'organizador', position: 'setter' };
 
 /** [nome, posição, nível 1–5 (null = sem nível), gênero, mensalista ou avulso] */
 export const DEMO_PLAYERS: Array<[string, string, number | null, Gender, 'monthly' | 'drop_in']> = [

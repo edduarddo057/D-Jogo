@@ -36,6 +36,8 @@ import {
   type NextRound,
 } from '@/features/live';
 import { positionLabels, useSports } from '@/features/profile';
+import { AddPersonForm } from '@/features/demo';
+import { isDemoActive } from '@/lib/demo';
 import { formatMoneyShort } from '@/lib/format';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
@@ -370,6 +372,7 @@ function Flow({
           </List>
           <AddMissing
             session={s}
+            sportId={sportId}
             onAdd={(p) =>
               set((cur) => ({
                 players: [...cur.players, p],
@@ -441,7 +444,16 @@ function Flow({
   );
 }
 
-function AddMissing({ session, onAdd }: { session: GameDaySession; onAdd: (p: GameDayPlayer) => void }) {
+function AddMissing({
+  session,
+  sportId,
+  onAdd,
+}: {
+  session: GameDaySession;
+  sportId: string;
+  onAdd: (p: GameDayPlayer) => void;
+}) {
+  const demo = isDemoActive();
   const members = useMembers(session.groupId);
   const [open, setOpen] = useState(false);
   const known = new Set(session.players.map((p) => p.id));
@@ -452,35 +464,63 @@ function AddMissing({ session, onAdd }: { session: GameDaySession; onAdd: (p: Ga
         Adicionar quem não estava na lista
       </Button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Quem chegou sem estar na lista" closeLabel="Fechar">
-        {members.isPending ? (
-          <SkeletonList rows={3} />
-        ) : others.length === 0 ? (
-          <p>Todo mundo da turma já está na lista.</p>
-        ) : (
-          <List>
-            {others.map((m) => (
-              <ListItem
-                key={m.id}
-                leading={<Avatar name={m.user.name} id={m.user.id} src={m.user.photoUrl} decorative />}
-                title={m.user.name}
-                meta={MEMBERSHIP_LABEL[m.type]}
-                onClick={() => {
-                  onAdd({
-                    id: m.user.id,
-                    name: m.user.name,
-                    photoUrl: m.user.photoUrl ?? null,
-                    level: m.level ?? null,
-                    gender: m.gender ?? null,
-                    position: m.user.primaryPosition ?? null,
-                    membershipType: m.type,
-                    owesCents: null,
-                  });
-                  toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
-                }}
-              />
-            ))}
-          </List>
+        {/* Demonstração: dá para incluir alguém novo só pelo nome, sem conta */}
+        {demo && (
+          <Section title="Pessoa nova">
+            <AddPersonForm
+              groupId={session.groupId}
+              sportId={sportId}
+              submitLabel="Adicionar e marcar que chegou"
+              onAdded={(m) => {
+                onAdd({
+                  id: m.user.id,
+                  name: m.user.name,
+                  photoUrl: m.user.photoUrl ?? null,
+                  level: m.level ?? null,
+                  gender: m.gender ?? null,
+                  position: m.user.primaryPosition ?? null,
+                  membershipType: m.type,
+                  owesCents: null,
+                });
+                toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
+                setOpen(false);
+              }}
+            />
+          </Section>
         )}
+        {(() => {
+          const list = members.isPending ? (
+            <SkeletonList rows={3} />
+          ) : others.length === 0 ? (
+            !demo && <p>Todo mundo da turma já está na lista.</p>
+          ) : (
+            <List>
+              {others.map((m) => (
+                <ListItem
+                  key={m.id}
+                  leading={<Avatar name={m.user.name} id={m.user.id} src={m.user.photoUrl} decorative />}
+                  title={m.user.name}
+                  meta={MEMBERSHIP_LABEL[m.type]}
+                  onClick={() => {
+                    onAdd({
+                      id: m.user.id,
+                      name: m.user.name,
+                      photoUrl: m.user.photoUrl ?? null,
+                      level: m.level ?? null,
+                      gender: m.gender ?? null,
+                      position: m.user.primaryPosition ?? null,
+                      membershipType: m.type,
+                      owesCents: null,
+                    });
+                    toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
+                  }}
+                />
+              ))}
+            </List>
+          );
+          // na demonstração, a lista da turma vem depois de "Pessoa nova", com título
+          return demo && others.length > 0 ? <Section title="Da turma">{list}</Section> : list;
+        })()}
       </Sheet>
     </>
   );

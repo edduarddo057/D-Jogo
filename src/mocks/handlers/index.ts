@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { api } from '../utils';
 import { authHandlers } from './auth';
+import { demoHandlers } from './demo';
 import { groupHandlers } from './groups';
 import { inviteHandlers } from './invites';
 import { matchHandlers } from './matches';
@@ -32,6 +33,8 @@ export const handlersByModule = {
   payments: paymentHandlers,
   live: liveHandlers,
   sports: sportHandlers,
+  /** Só do modo demonstração: adicionar pessoa sem conta (não existe na API real). */
+  demo: demoHandlers,
 };
 export type MockModule = keyof typeof handlersByModule;
 

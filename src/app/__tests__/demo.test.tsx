@@ -1,10 +1,14 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { sha256Hex } from '@/lib/demo';
+import { useGameDayStore } from '@/features/live';
+import { sha256Hex, startDemo } from '@/lib/demo';
 import { db, newId, replaceDb } from '@/mocks/db';
 import { loadDemoDb, saveDemoDb } from '@/mocks/demo';
 import { createDemoDb, DEMO_PLAYERS } from '@/mocks/demo/seed';
 import { renderApp } from '@/test/renderWithProviders';
+
+/** Espera a fila do dia de jogo esvaziar, para nada vazar para o próximo teste (os ids da demo se repetem). */
+const syncDone = () => waitFor(() => expect(useGameDayStore.getState().sessions.demo_jogo?.outbox.length ?? 0).toBe(0));
 
 /** Modo demonstração: turma pronta, sem cadastro, dados salvos no aparelho. */
 describe('Modo demonstração', () => {
@@ -24,6 +28,7 @@ describe('Modo demonstração', () => {
     await screen.findByRole('heading', { name: 'Quem chegou?' });
     await user.click(screen.getByRole('button', { name: `Sortear times com ${DEMO_PLAYERS.length + 1}` }));
     expect(await screen.findByRole('button', { name: 'Começar' })).toBeInTheDocument();
+    await syncDone();
   });
 
   it('o que foi feito fica salvo no aparelho e volta igual, sem repetir ids', () => {
@@ -47,6 +52,47 @@ describe('Modo demonstração', () => {
     expect(loadDemoDb()).not.toBeNull();
     expect(db.rounds).toHaveLength(1);
     expect(newId('x')).not.toBe(lastId);
+  });
+
+  it('em Membros, adiciona pessoa só pelo nome: sem conta, já confirmada no jogo (mesmo cheio)', async () => {
+    startDemo();
+    replaceDb(createDemoDb());
+    const user = userEvent.setup();
+    renderApp('/organizar/demo_turma/membros');
+    await user.click(await screen.findByRole('button', { name: 'Adicionar pessoa' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Adicionar pessoa' });
+    await user.type(within(sheet).getByLabelText('Nome'), 'Paula Mendes');
+    await user.click(within(sheet).getByRole('button', { name: 'Adicionar' }));
+
+    await waitFor(() => expect(db.users.find((u) => u.name === 'Paula Mendes')).toBeDefined());
+    const paula = db.users.find((u) => u.name === 'Paula Mendes');
+    expect(db.memberships.find((m) => m.userId === paula?.id)?.status).toBe('active');
+    const jogo = db.matches.find((m) => m.id === 'demo_jogo');
+    expect(db.participations.find((p) => p.userId === paula?.id && p.matchId === 'demo_jogo')?.status).toBe(
+      'confirmed',
+    );
+    expect(jogo?.capacity).toBe(15); // abriu uma vaga a mais
+    expect(await screen.findByText(/Paula entrou na turma/)).toBeInTheDocument();
+  });
+
+  it('no dia de jogo, pessoa nova entra já marcada como chegou', async () => {
+    startDemo();
+    replaceDb(createDemoDb());
+    const user = userEvent.setup();
+    renderApp('/organizar/demo_turma/dia-de-jogo/demo_jogo');
+    await user.click(await screen.findByRole('button', { name: 'Adicionar quem não estava na lista' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Quem chegou sem estar na lista' });
+    await user.type(within(sheet).getByLabelText('Nome'), 'Rui Teixeira');
+    await user.click(within(sheet).getByRole('button', { name: 'Adicionar e marcar que chegou' }));
+    expect(await screen.findByRole('button', { name: 'Sortear times com 15' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Rui/ })).toBeInTheDocument();
+    await syncDone();
+  });
+
+  it('fora da demonstração, "Adicionar pessoa" não aparece', async () => {
+    renderApp('/organizar/g_sabado/membros');
+    await screen.findByText(/Nível e gênero só você vê/);
+    expect(screen.queryByRole('button', { name: 'Adicionar pessoa' })).not.toBeInTheDocument();
   });
 
   it('/demo pede a senha: errada avisa, certa liga a demonstração', async () => {

@@ -36,7 +36,7 @@ Para mostrar o app sem cadastro: em `/demo`, com senha, a pessoa entra como orga
 
 - **Senha:** só a impressão digital fica no ambiente, em `VITE_DEMO_PASSWORD_HASH`. Gere com `pnpm demo:senha "sua senha"`. Vazio = demonstração fechada.
 - **Dados:** ficam salvos no aparelho por `VITE_DEMO_DAYS` dias (padrão 30). "Sair" não apaga: voltando por `/demo` com a senha, a pessoa continua de onde parou. Em `/demo` dá para apagar e começar do zero.
-- **Jogadores:** edite `DEMO_PLAYERS` em `src/mocks/demo/seed.ts`.
+- **Jogadores:** a turma já vem com 13 (edite `DEMO_PLAYERS` em `src/mocks/demo/seed.ts`), e dá para **adicionar pessoas na hora, só pelo nome**, sem conta: em Organizar › Membros ("Adicionar pessoa") ou no dia de jogo ("Adicionar quem não estava na lista" › Pessoa nova). A pessoa entra na turma e já fica confirmada no próximo jogo; se a lista estiver cheia antes do jogo, abre uma vaga a mais. Só existe na demonstração (rota interna dos mocks, `POST /demo/groups/{id}/players`, que não existe na API real).
 - **Limite:** a senha é conferida no navegador. Ela impede o acesso casual, mas quem souber mexer no navegador consegue entrar. Como a demo não tem dados reais, o risco é só alguém ver a demonstração.
 
 ## Scripts
