@@ -45,6 +45,8 @@ export const routes: RouteObject[] = [
           lazyPage('convite/:code', () => import('@/pages/InvitePage/InvitePage'), 'InvitePage'),
           lazyPage('termos', () => import('@/pages/LegalPages/TermsPage'), 'TermsPage'),
           lazyPage('privacidade', () => import('@/pages/LegalPages/PrivacyPage'), 'PrivacyPage'),
+          // Modo demonstração (com senha): turma pronta, sem cadastro, dados salvos no aparelho
+          lazyPage('demo', () => import('@/pages/DemoPage/DemoPage'), 'DemoPage'),
         ],
       },
       {

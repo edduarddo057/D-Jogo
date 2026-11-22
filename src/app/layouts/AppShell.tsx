@@ -6,6 +6,7 @@ import { useOrganizes } from '@/features/groups';
 import { PaySheet } from '@/features/payments';
 import styles from './AppShell.module.css';
 import { BrandLogo } from '@/components/BrandLogo';
+import { DemoBanner } from './DemoBanner';
 import { OfflineBanner } from './OfflineBanner';
 import { RouteAnnouncer } from './RouteAnnouncer';
 import { SkipLink } from './SkipLink';
@@ -30,6 +31,7 @@ export function AppShell() {
       <SkipLink />
       <Navigation items={items} brand={<BrandLogo />} label="Abas" />
       <div className={styles.column}>
+        <DemoBanner />
         <OfflineBanner />
         <main className={styles.content} id="conteudo" tabIndex={-1}>
           <Outlet />

@@ -30,6 +30,15 @@ Os dados ficam em memória: recarregar a página volta tudo ao início. Para tro
 | Sofia (fora das turmas) | (11) 95555-4444 | Entrar pelo convite `/convite/SABADO25` |
 | Qualquer outro número | — | Primeiro acesso: celular, código e perfil |
 
+## Modo demonstração (`/demo`)
+
+Para mostrar o app sem cadastro: em `/demo`, com senha, a pessoa entra como organizadora de uma **Turma Demo** pronta (13 jogadores e um jogo hoje, todo mundo confirmado) e roda uma partida completa no próprio celular. Tudo roda no navegador, com os mocks: nada vai para a API real.
+
+- **Senha:** só a impressão digital fica no ambiente, em `VITE_DEMO_PASSWORD_HASH`. Gere com `pnpm demo:senha "sua senha"`. Vazio = demonstração fechada.
+- **Dados:** ficam salvos no aparelho por `VITE_DEMO_DAYS` dias (padrão 30). "Sair" não apaga: voltando por `/demo` com a senha, a pessoa continua de onde parou. Em `/demo` dá para apagar e começar do zero.
+- **Jogadores:** edite `DEMO_PLAYERS` em `src/mocks/demo/seed.ts`.
+- **Limite:** a senha é conferida no navegador. Ela impede o acesso casual, mas quem souber mexer no navegador consegue entrar. Como a demo não tem dados reais, o risco é só alguém ver a demonstração.
+
 ## Scripts
 
 | Script | O que faz |
@@ -44,6 +53,7 @@ Os dados ficam em memória: recarregar a página volta tudo ao início. Para tro
 | `pnpm tokens` | Gera `src/styles/tokens.css` de `docs/design-system/tokens.json` |
 | `pnpm api:types` | Gera `src/lib/http/schema.d.ts` de `docs/api/openapi.yaml` |
 | `pnpm icons` | Gera o símbolo transparente e os ícones do PWA a partir de `public/brand/source/simbolo-original.png` |
+| `pnpm demo:senha "senha"` | Gera a impressão digital da senha do modo demonstração (`VITE_DEMO_PASSWORD_HASH`) |
 | `pnpm budget` | Confere o orçamento de JS/CSS inicial (depois do build) |
 | `pnpm qa:audit [url]` | Acessibilidade, rolagem horizontal e teclado no Chrome, em 25 telas e folhas × 4 larguras × 2 temas (precisa do app rodando com mocks e de um Chrome em `CHROME_PATH`) |
 | `pnpm check` | Tudo o que o CI confere, de uma vez |

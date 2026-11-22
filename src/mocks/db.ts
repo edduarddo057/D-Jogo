@@ -276,6 +276,7 @@ const DEFAULT_RULES: DbGroupRules = {
   withdrawalDeadlineHours: 24,
 };
 export const defaultRules = (): DbGroupRules => structuredClone(DEFAULT_RULES);
+export { ALL_ON as allNotificationsOn };
 
 /** Gerador pseudoaleatório fixo, para os dados de exemplo serem sempre iguais. */
 function seeded(seed: number) {
@@ -968,7 +969,18 @@ export function resetDb(overrides: Partial<Pick<Db, 'session'>> = {}): Db {
   return db;
 }
 
+/**
+ * Troca o banco inteiro (modo demonstração: o banco da demo, carregado do aparelho ou novo).
+ * `nextSeq` continua a numeração dos ids de onde parou, para não repetir id depois de recarregar.
+ */
+export function replaceDb(next: Db, nextSeq?: number): Db {
+  db = next;
+  if (nextSeq !== undefined) seq = Math.max(seq, nextSeq);
+  return db;
+}
+
 let seq = 1000;
+export const currentSeq = () => seq;
 export const newId = (prefix: string) => `${prefix}_${++seq}`;
 export const nowIso = () => new Date().toISOString();
 
