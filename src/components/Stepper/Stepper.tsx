@@ -7,10 +7,12 @@ export interface StepperProps {
   min?: number;
   max?: number;
   onChange: (value: number) => void;
+  /** Como mostrar o número (ex.: 0 → "–" para "sem nota"). */
+  format?: (value: number) => string;
 }
 
 /** − número + (vagas). */
-export function Stepper({ label, value, min = 0, max = 99, onChange }: StepperProps) {
+export function Stepper({ label, value, min = 0, max = 99, onChange, format }: StepperProps) {
   return (
     <div className={styles.stepper} role="group" aria-label={label}>
       <button
@@ -21,7 +23,7 @@ export function Stepper({ label, value, min = 0, max = 99, onChange }: StepperPr
       >
         <Minus size={18} aria-hidden="true" />
       </button>
-      <output aria-live="polite">{value}</output>
+      <output aria-live="polite">{format ? format(value) : value}</output>
       <button
         type="button"
         aria-label="Mais"

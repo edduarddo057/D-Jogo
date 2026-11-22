@@ -7,6 +7,8 @@ export interface DemoPersonInput {
   level: number | null;
   gender: 'male' | 'female' | null;
   type: 'monthly' | 'drop_in';
+  /** Notas de 1 a 10 nos fundamentos (RN-17a); null = sem notas. */
+  skills: Record<string, number> | null;
 }
 
 /**

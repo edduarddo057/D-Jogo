@@ -4,7 +4,7 @@ import { Chips } from '@/components/Chips';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { TextField } from '@/components/TextField';
 import type { Member } from '@/features/groups';
-import { useSports } from '@/features/profile';
+import { filledSkills, SkillsEditor, useSports, type SkillScores } from '@/features/profile';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import { useAddDemoPerson } from '../../useAddDemoPerson';
@@ -30,14 +30,24 @@ export function AddPersonForm({ groupId, sportId, onAdded, submitLabel = 'Adicio
   const [level, setLevel] = useState('0');
   const [type, setType] = useState<'drop_in' | 'monthly'>('drop_in');
   const [gender, setGender] = useState<'female' | 'male' | null>(null);
+  const [skills, setSkills] = useState<SkillScores>({});
   const [error, setError] = useState<string | undefined>();
-  const positions = sports.data?.find((s) => s.id === sportId)?.positions ?? [];
+  const sport = sports.data?.find((s) => s.id === sportId);
+  const positions = sport?.positions ?? [];
+  const hasSkills = (sport?.skills.length ?? 0) > 0;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (name.trim().length < 2) return setError('Digite o nome da pessoa.');
     add.mutate(
-      { name: name.trim(), position, level: level === '0' ? null : Number(level), gender, type },
+      {
+        name: name.trim(),
+        position,
+        level: level === '0' ? null : Number(level),
+        gender,
+        type,
+        skills: filledSkills(skills),
+      },
       {
         onSuccess: ({ member }) => {
           onAdded(member);
@@ -45,6 +55,7 @@ export function AddPersonForm({ groupId, sportId, onAdded, submitLabel = 'Adicio
           setPosition(null);
           setLevel('0');
           setGender(null);
+          setSkills({});
         },
         onError: (err) => toast(isApiError(err) ? messageFor(err.code) : 'Não deu para adicionar.', { tone: 'error' }),
       },
@@ -88,6 +99,14 @@ export function AddPersonForm({ groupId, sportId, onAdded, submitLabel = 'Adicio
           onChange={setLevel}
         />
       </div>
+      {hasSkills && (
+        <div className={styles.field}>
+          <span className={styles.label}>
+            Fundamentos <span className={styles.hint}>opcional, de 1 a 10</span>
+          </span>
+          <SkillsEditor sportId={sportId} value={skills} onChange={setSkills} />
+        </div>
+      )}
       <div className={styles.field}>
         <span className={styles.label} aria-hidden="true">
           Tipo

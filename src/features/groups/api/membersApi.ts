@@ -23,7 +23,7 @@ export async function addMember(groupId: string, body: { nickname: string; type:
 export async function updateMember(
   groupId: string,
   memberId: string,
-  patch: { type?: MembershipType; level?: number | null },
+  patch: { type?: MembershipType; level?: number | null; skills?: Record<string, number> | null },
 ): Promise<Member> {
   const { data } = await http.patch<Member>(`${g(groupId)}/members/${encodeURIComponent(memberId)}`, patch);
   return data;

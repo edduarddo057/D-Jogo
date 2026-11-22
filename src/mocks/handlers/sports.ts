@@ -14,6 +14,14 @@ export const SPORTS: Schema<'Sport'>[] = [
       { id: 'middle', label: 'Central', short: 'CEN' },
       { id: 'libero', label: 'Líbero', short: 'LÍB' },
     ],
+    // Fundamentos do vôlei (RN-17a): nota de 1 a 10 por pessoa, na turma
+    skills: [
+      { id: 'serve', label: 'Saque', short: 'Saq' },
+      { id: 'reception', label: 'Recepção', short: 'Rec' },
+      { id: 'attack', label: 'Ataque', short: 'Ata' },
+      { id: 'setting', label: 'Levantamento', short: 'Lev' },
+      { id: 'pass', label: 'Passe', short: 'Pas' },
+    ],
     levels: [
       { value: 1, label: 'Iniciante' },
       { value: 2, label: 'Básico' },
@@ -30,6 +38,7 @@ export const SPORTS: Schema<'Sport'>[] = [
       { id: 'left', label: 'Esquerda', short: 'ESQ' },
       { id: 'right', label: 'Direita', short: 'DIR' },
     ],
+    skills: [], // ainda sem fundamentos
     levels: [
       { value: 1, label: 'Iniciante' },
       { value: 2, label: 'Básico' },
@@ -49,6 +58,7 @@ export const SPORTS: Schema<'Sport'>[] = [
       { id: 'midfielder', label: 'Meia', short: 'MEI' },
       { id: 'forward', label: 'Atacante', short: 'ATA' },
     ],
+    skills: [], // ainda sem fundamentos
     levels: [
       { value: 1, label: 'Iniciante' },
       { value: 2, label: 'Básico' },
@@ -67,6 +77,7 @@ export const SPORTS: Schema<'Sport'>[] = [
       { id: 'ala', label: 'Ala', short: 'ALA' },
       { id: 'pivo', label: 'Pivô', short: 'PIV' },
     ],
+    skills: [], // ainda sem fundamentos
     levels: [
       { value: 1, label: 'Iniciante' },
       { value: 2, label: 'Básico' },
@@ -84,6 +95,7 @@ export const SPORTS: Schema<'Sport'>[] = [
       { id: 'wing', label: 'Ala', short: 'ALA' },
       { id: 'center', label: 'Pivô', short: 'PIV' },
     ],
+    skills: [], // ainda sem fundamentos
     levels: [
       { value: 1, label: 'Iniciante' },
       { value: 2, label: 'Básico' },

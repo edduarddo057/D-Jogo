@@ -687,6 +687,11 @@ paths:
               properties:
                 type: { $ref: '#/components/schemas/MembershipType' }
                 level: { type: [integer, 'null'], minimum: 1, maximum: 5, description: Nível na turma (RN-17). }
+                skills:
+                  description: Notas dos fundamentos (RN-17a). Substitui todas; null apaga.
+                  oneOf:
+                    - $ref: '#/components/schemas/SkillScores'
+                    - type: 'null'
       responses:
         '200':
           description: OK
@@ -1736,7 +1741,7 @@ components:
           items: { $ref: '#/components/schemas/Payment' }
     Sport:
       type: object
-      required: [id, name, positions, levels, defaultTeamSize]
+      required: [id, name, positions, levels, skills, defaultTeamSize]
       properties:
         id: { type: string, examples: [volleyball] }
         name: { type: string, examples: ['Vôlei'] }
@@ -1758,6 +1763,20 @@ components:
             properties:
               value: { type: integer }
               label: { type: string }
+        skills:
+          type: array
+          description: Fundamentos da modalidade, com nota de 1 a 10 por pessoa na turma (RN-17a). Vazio = a modalidade ainda não tem.
+          items:
+            type: object
+            required: [id, label, short]
+            properties:
+              id: { type: string, examples: [serve] }
+              label: { type: string, examples: ['Saque'] }
+              short: { type: string, examples: ['Saq'] }
+    SkillScores:
+      type: object
+      description: Nota de 1 a 10 por fundamento (id do fundamento → nota). Fundamento sem nota fica de fora (RN-17a).
+      additionalProperties: { type: integer, minimum: 1, maximum: 10 }
     SportProfileInput:
       type: object
       required: [sportId, positions]
@@ -1975,6 +1994,11 @@ components:
           type: [integer, 'null']
           minimum: 1
           maximum: 5
+        skills:
+          description: Notas de 1 a 10 nos fundamentos da modalidade, definidas pelo organizador (RN-17a). Só para o dono.
+          oneOf:
+            - $ref: '#/components/schemas/SkillScores'
+            - type: 'null'
         gender:
           description: Gênero informado pelo jogador. Só para o dono e o próprio.
           oneOf:
@@ -2271,6 +2295,10 @@ components:
       required: [level, gender, position]
       properties:
         level: { type: boolean, description: Equilibra pelo nível que o organizador definiu na turma (sem nível = 3). }
+        levelBy:
+          type: string
+          enum: [overall, skills]
+          description: 'Com level ligado: overall = nível geral (o padrão, quando não vem); skills = equilibra cada fundamento entre os times (RN-103a).'
         gender: { type: boolean, description: Time misto — distribui masculino e feminino por igual. }
         position: { type: boolean, description: Evita concentrar a mesma posição num time. }
     LiveDrawInput:
@@ -2304,6 +2332,11 @@ components:
         - type: object
           properties:
             gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
+            skills:
+              description: Notas dos fundamentos na turma (RN-17a), para o sorteio por fundamentos.
+              oneOf:
+                - $ref: '#/components/schemas/SkillScores'
+                - type: 'null'
             membershipType: { $ref: '#/components/schemas/MembershipType' }
             owesCents: { type: [integer, 'null'], description: 'Avulso que ainda deve o jogo ("Deve R$ 25" na chegada).' }
     LiveDraw:

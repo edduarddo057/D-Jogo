@@ -12,6 +12,7 @@ import {
 } from '../db';
 import { releaseSpot } from '../domain/attendance';
 import { isOwner, toGroup, toMember } from '../serializers';
+import { SPORTS } from './sports';
 import { api, authed, fail, json, noContent, problem } from '../utils';
 
 const groupOrFail = (groupId: string, userId: string) => {
@@ -85,6 +86,7 @@ export const groupHandlers = [
         status: 'active',
         joinedAt: nowIso(),
         level: null,
+        skills: null,
       });
       return json(toGroup(group, user.id), 201);
     }),
@@ -193,6 +195,7 @@ export const groupHandlers = [
         status: 'active' as const,
         joinedAt: nowIso(),
         level: null,
+        skills: null,
       };
       mb.status = 'active';
       mb.type = body.type;
@@ -207,11 +210,25 @@ export const groupHandlers = [
       const g = ownerOrFail(String(params.groupId), user.id);
       const mb = db.memberships.find((m) => m.id === params.memberId && m.groupId === g.id && m.status === 'active');
       if (!mb) return problem(404, 'NOT_FOUND');
-      const body = (await request.json()) as { type?: 'monthly' | 'drop_in'; level?: number | null };
+      const body = (await request.json()) as {
+        type?: 'monthly' | 'drop_in';
+        level?: number | null;
+        skills?: Record<string, number> | null;
+      };
       if (body.level !== undefined) {
         if (body.level !== null && !(Number.isInteger(body.level) && body.level >= 1 && body.level <= 5))
           return problem(400, 'VALIDATION_ERROR', { fields: { level: 'De 1 a 5' } });
         mb.level = body.level; // RN-17
+      }
+      if (body.skills !== undefined) {
+        // RN-17a: só fundamentos da modalidade, notas inteiras de 1 a 10; null apaga
+        const allowed = new Set(SPORTS.find((s) => s.id === findGroup(mb.groupId)?.sportId)?.skills.map((k) => k.id));
+        const entries = Object.entries(body.skills ?? {});
+        if (entries.some(([k, n]) => !allowed.has(k) || !(Number.isInteger(n) && n >= 1 && n <= 10)))
+          return problem(400, 'VALIDATION_ERROR', {
+            fields: { skills: 'Notas de 1 a 10 nos fundamentos da modalidade' },
+          });
+        mb.skills = entries.length ? Object.fromEntries(entries) : null;
       }
       if (body.type) mb.type = body.type;
       return json(toMember(mb, user.id));

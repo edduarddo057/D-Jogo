@@ -18,7 +18,7 @@ import {
   type MembershipType,
 } from '@/features/groups';
 import { AddPersonForm } from '@/features/demo';
-import { positionLabels, useSports } from '@/features/profile';
+import { filledSkills, positionLabels, SkillsEditor, useSports, type SkillScores } from '@/features/profile';
 import { isDemoActive } from '@/lib/demo';
 import { monthName } from '@/lib/format';
 import { toast } from '@/stores';
@@ -143,6 +143,9 @@ function MemberSheet({
   const remove = useRemoveMember(group.id);
   const [type, setType] = useState<MembershipType>(member.type);
   const [level, setLevel] = useState<string>(member.level ? String(member.level) : '0');
+  const [skills, setSkills] = useState<SkillScores>(() => ({ ...(member.skills ?? {}) }));
+  const sports = useSports();
+  const hasSkills = (sports.data?.find((s) => s.id === group.sportId)?.skills.length ?? 0) > 0;
   const [confirmRemove, setConfirmRemove] = useState(false);
   const owner = member.role === 'owner';
   const [nextMonth] = useState(() => {
@@ -152,10 +155,12 @@ function MemberSheet({
   });
 
   const save = () => {
-    const patch: { type?: MembershipType; level?: number | null } = {};
+    const patch: { type?: MembershipType; level?: number | null; skills?: Record<string, number> | null } = {};
     if (type !== member.type) patch.type = type;
     const lv = level === '0' ? null : Number(level);
     if (lv !== (member.level ?? null)) patch.level = lv;
+    const sk = filledSkills(skills);
+    if (JSON.stringify(sk) !== JSON.stringify(member.skills ?? null)) patch.skills = sk;
     if (Object.keys(patch).length === 0) return onClose();
     update.mutate(
       { memberId: member.id, ...patch },
@@ -220,6 +225,15 @@ function MemberSheet({
         />
         <span className={styles.help}>Só você vê. Usado para equilibrar os times. Sem nível conta como 3.</span>
       </div>
+      {hasSkills && (
+        <div className={styles.field}>
+          <span className={styles.label}>Fundamentos (1 a 10)</span>
+          <SkillsEditor sportId={group.sportId} value={skills} onChange={setSkills} />
+          <span className={styles.help}>
+            Só você vê. No sorteio por fundamentos, cada um é equilibrado entre os times. Sem nota, conta o nível × 2.
+          </span>
+        </div>
+      )}
       <List>
         <ListItem inline title="Gênero" trailing={<span className={styles.value}>{genderText(member.gender)}</span>} />
         <ListItem

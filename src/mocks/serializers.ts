@@ -320,6 +320,7 @@ export function toMember(m: DbMembership, viewerId: string): Schema<'Member'> {
     type: m.type,
     joinedAt: m.joinedAt,
     level: owner ? m.level : null,
+    skills: owner ? m.skills : null, // RN-17a: só o dono vê
     gender: owner || viewerId === m.userId ? (user?.gender ?? null) : null,
     monthlyFeeStatus: m.type === 'monthly' && (owner || viewerId === m.userId) ? (fee?.status ?? null) : null,
     attendanceRate: owner ? attendanceRateIn(m.groupId, m.userId) : null,
@@ -399,6 +400,7 @@ export function toLivePlayer(userId: string, groupId: string, matchId?: string):
   return {
     ...summaryOf(userId),
     level: mb?.level ?? null,
+    skills: mb?.skills ?? null,
     gender: u?.gender ?? null,
     membershipType: p?.membershipType ?? mb?.type ?? 'drop_in',
     owesCents: pay && pay.status !== 'paid' && pay.status !== 'cancelled' ? pay.amountCents : null,

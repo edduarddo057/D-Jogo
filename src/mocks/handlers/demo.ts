@@ -22,6 +22,7 @@ export const demoHandlers = [
         level?: number | null;
         gender?: Gender | null;
         type?: 'monthly' | 'drop_in';
+        skills?: Record<string, number> | null;
       };
       const name = body.name?.trim() ?? '';
       if (name.length < 2) return problem(400, 'VALIDATION_ERROR', { fields: { name: 'Digite o nome' } });
@@ -48,6 +49,7 @@ export const demoHandlers = [
         status: 'active' as const,
         joinedAt: nowIso(),
         level: body.level ?? null,
+        skills: body.skills && Object.keys(body.skills).length ? body.skills : null,
       };
       db.memberships.push(membership);
 

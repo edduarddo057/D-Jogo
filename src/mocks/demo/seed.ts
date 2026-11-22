@@ -1,5 +1,5 @@
 import type { Db, DbGroup, DbMatch, DbMembership, DbParticipation, DbUser, Gender } from '../db';
-import { allNotificationsOn, defaultRules } from '../db';
+import { allNotificationsOn, defaultRules, sampleSkills } from '../db';
 
 /**
  * Turma da demonstração: quem entra pela /demo é o organizador de uma turma de vôlei pronta, com 13
@@ -85,6 +85,8 @@ export function createDemoDb(now = new Date()): Db {
     status: 'active',
     joinedAt: iso(new Date(now.getTime() - 30 * 86_400_000)),
     level: i === 0 ? 3 : (DEMO_PLAYERS[i - 1]?.[2] ?? null),
+    // fundamentos de exemplo (RN-17a), a partir do nível e da posição
+    skills: sampleSkills(i === 0 ? 3 : (DEMO_PLAYERS[i - 1]?.[2] ?? null), people[i]?.position ?? null, i),
   }));
 
   const match: DbMatch = {
