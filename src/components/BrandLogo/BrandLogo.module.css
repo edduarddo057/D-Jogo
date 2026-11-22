@@ -45,5 +45,9 @@
 }
 
 .accent {
-  color: var(--color-primary);
+  color: var(--color-accent-text); /* verde escuro no claro, menta no escuro: legível nos dois */
+}
+
+.onDark .accent {
+  color: var(--color-on-brand-accent);
 }

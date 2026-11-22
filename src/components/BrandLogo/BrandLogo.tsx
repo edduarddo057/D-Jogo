@@ -12,7 +12,7 @@ export interface BrandLogoProps {
 
 /**
  * Logotipo (design system › Marca): o símbolo + "Dá Jogo" em itálico pesado, "Dá" na cor do texto e
- * "Jogo" em laranja. No tema claro, o branco do símbolo vira grafite (public/brand/symbol-on-light.png).
+ * "Jogo" em verde. No tema claro, o branco do símbolo vira azul-marinho (public/brand/symbol-on-light.png).
  */
 export function BrandLogo({ tone = 'auto', size = 'md', symbolOnly, className }: BrandLogoProps) {
   return (

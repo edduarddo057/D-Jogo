@@ -10,7 +10,7 @@ export function InviteQr({ url }: { url: string }) {
     let alive = true;
     void import('uqr').then(({ renderSVG }) => {
       if (!alive) return;
-      const svg = renderSVG(url, { ecc: 'M', border: 2, pixelSize: 8, blackColor: '#141416', whiteColor: '#ffffff' });
+      const svg = renderSVG(url, { ecc: 'M', border: 2, pixelSize: 8, blackColor: '#142a40', whiteColor: '#ffffff' });
       setSrc(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
     });
     return () => {
