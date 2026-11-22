@@ -1,0 +1,16 @@
+.tag {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-on-team);
+  font: 700 1.2rem / 1 var(--font-sans);
+}
+
+.md {
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: 1.4rem;
+}

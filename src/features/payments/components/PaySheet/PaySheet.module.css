@@ -1,0 +1,72 @@
+.amountBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}
+
+.amount {
+  font: var(--text-money-weight) 4rem / 4.6rem var(--font-display);
+  letter-spacing: var(--text-money-tracking);
+}
+
+.deadline {
+  margin-top: var(--space-1);
+}
+
+.muted {
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.help {
+  color: var(--color-text-muted);
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+  text-align: center;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 4.4rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) 0;
+  text-align: center;
+}
+
+.mark {
+  display: grid;
+  place-items: center;
+  width: 6.4rem;
+  height: 6.4rem;
+  margin-bottom: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.resultTitle {
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+}
+
+.result button {
+  margin-top: var(--space-4);
+}

@@ -1,0 +1,2539 @@
+openapi: 3.1.0
+info:
+  title: Dá Jogo API
+  version: 0.3.0
+  summary: Contrato do Dá Jogo 2.0 (turmas, jogos, presença, fila, pagamentos, caixa, avisos e dia de jogo).
+  description: |
+    Contrato independente de tecnologia. Regras de negócio em `docs/backend/business-rules.md` (citadas como RN-xx);
+    entidades e estados em `docs/backend/domain.md`.
+
+    **Convenções**
+    - JSON em UTF-8; nomes de campos em camelCase e em inglês; textos para o usuário em pt-BR.
+    - Datas em ISO 8601 com fuso. Dinheiro em centavos (inteiros), sempre BRL.
+    - Listas paginadas por cursor: `?cursor=&limit=` → `{ items, nextCursor }` (`nextCursor` nulo no fim).
+    - Erros no formato Problem Details (RFC 9457) com `code` estável — o front traduz pelo `code`.
+    - `Idempotency-Key` (UUID) é aceito em todo POST que cria algo ou mexe com vaga/dinheiro; repetir a chave devolve a mesma resposta.
+    - Recursos de turma trazem `viewer` com o papel de quem pergunta e as ações permitidas.
+    - Autenticação: `Authorization: Bearer <accessToken>`. O token de renovação deve preferencialmente ir em cookie
+      `HttpOnly; Secure; SameSite=Lax` (ver `docs/frontend/architecture.md` › Sessão); o corpo também o aceita para clientes sem cookie.
+servers:
+  - url: https://api.example.com/v1
+    description: Produção (domínio a definir)
+  - url: http://localhost:3333/v1
+    description: Desenvolvimento
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Me
+  - name: Sports
+  - name: Groups
+  - name: Members
+  - name: Invites
+  - name: Matches
+  - name: Attendance
+  - name: Payments
+  - name: Finance
+  - name: Live
+  - name: Notifications
+
+paths:
+  # ───────────────────────────── Auth
+  /auth/otp:
+    post:
+      tags: [Auth]
+      operationId: requestOtp
+      summary: Envia o código de 6 dígitos (RN-01)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { $ref: '#/components/schemas/Phone' }
+                channel: { type: string, enum: [whatsapp, sms], default: whatsapp }
+      responses:
+        '202':
+          description: Código enviado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OtpChallenge' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      operationId: verifyOtp
+      summary: Valida o código e abre a sessão
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, code]
+              properties:
+                challengeId: { type: string }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200':
+          description: Sessão aberta. `user.profileCompleted = false` leva ao onboarding (RN-02).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshSession
+      summary: Renova o token de acesso (RN-04)
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string, description: Opcional quando enviado por cookie. }
+      responses:
+        '200':
+          description: Novos tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: Encerra a sessão e revoga o token de renovação
+      responses:
+        '204': { description: Sessão encerrada }
+
+  # ───────────────────────────── Me
+  /me:
+    get:
+      tags: [Me]
+      operationId: getMe
+      summary: Dados da conta logada
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      tags: [Me]
+      operationId: updateMe
+      summary: Edita nome, nickname e gênero
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { $ref: '#/components/schemas/PersonName' }
+                nickname: { $ref: '#/components/schemas/Nickname' }
+                gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+    delete:
+      tags: [Me]
+      operationId: deleteAccount
+      summary: Exclui e anonimiza a conta (RN-91)
+      responses:
+        '204': { description: Conta excluída }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /me/onboarding:
+    post:
+      tags: [Me]
+      operationId: completeOnboarding
+      summary: Conclui o primeiro acesso (RN-02, RN-05)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, nickname, sportProfile, acceptedTermsVersion]
+              properties:
+                name: { $ref: '#/components/schemas/PersonName' }
+                nickname: { $ref: '#/components/schemas/Nickname' }
+                sportProfile: { $ref: '#/components/schemas/SportProfileInput' }
+                gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
+                acceptedTermsVersion: { type: string, examples: ['2026-11'] }
+                inviteCode: { type: string, description: Convite a aceitar ao terminar (fluxo de convite sem login). }
+      responses:
+        '200':
+          description: Perfil concluído
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [me]
+                properties:
+                  me: { $ref: '#/components/schemas/Me' }
+                  joinedGroupId: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /me/terms:
+    post:
+      tags: [Me]
+      operationId: acceptTerms
+      summary: Aceita uma nova versão dos termos e da política de privacidade (RN-05)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties:
+                version: { type: string, examples: ['2026-11'] }
+      responses:
+        '200':
+          description: Aceite registrado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /me/export:
+    get:
+      tags: [Me]
+      operationId: exportMyData
+      summary: Cópia dos meus dados em JSON (LGPD, art. 18; RN-92)
+      responses:
+        '200':
+          description: Arquivo com os dados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DataExport' }
+
+  /me/sport-profiles/{sportId}:
+    put:
+      tags: [Me]
+      operationId: upsertSportProfile
+      summary: Cria ou atualiza posições e nível numa modalidade
+      parameters:
+        - { name: sportId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SportProfileInput' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SportProfile' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /me/photo:
+    put:
+      tags: [Me]
+      operationId: uploadPhoto
+      summary: Envia a foto de perfil (JPEG/PNG/WebP, até 5 MB; o servidor recorta em quadrado)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [photoUrl]
+                properties:
+                  photoUrl: { type: string, format: uri }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Me]
+      operationId: deletePhoto
+      summary: Remove a foto
+      responses:
+        '204': { description: Removida }
+
+  /me/groups:
+    get:
+      tags: [Me]
+      operationId: listMyGroups
+      summary: Minhas turmas (Início e aba Turmas)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/GroupSummary' }
+
+  /me/matches:
+    get:
+      tags: [Me]
+      operationId: listMyMatches
+      summary: Meus jogos (aba Jogos) ou o histórico (Perfil › Jogos)
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [upcoming, history], default: upcoming }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK. `upcoming` vem do mais próximo para o mais distante, com `myParticipation`; `history`, do mais recente para o mais antigo, com `myHistory`.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MatchSummaryPage' }
+
+  /me/payments:
+    get:
+      tags: [Me]
+      operationId: listMyPayments
+      summary: Minhas cobranças (pendentes e pagas)
+      parameters:
+        - name: status
+          in: query
+          schema: { type: array, items: { $ref: '#/components/schemas/PaymentStatus' } }
+          style: form
+          explode: false
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentPage' }
+
+  /me/stats:
+    get:
+      tags: [Me]
+      operationId: getMyStats
+      summary: Os 3 números do Você — jogos, frequência e vezes destaque (RN-93)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyStats' }
+
+  /me/stats/details:
+    get:
+      tags: [Me]
+      operationId: getMyStatsDetails
+      summary: Estatísticas do mural — rodadas, vitórias, onde vai melhor, parceiros e forma recente (RN-94)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MyStatsDetails' }
+
+  /me/phone/otp:
+    post:
+      tags: [Me]
+      operationId: requestPhoneChange
+      summary: Trocar número — envia o código para o número novo (RN-06)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { $ref: '#/components/schemas/Phone' }
+                channel: { type: string, enum: [whatsapp, sms], default: whatsapp }
+      responses:
+        '202':
+          description: Código enviado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OtpChallenge' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /me/phone/verify:
+    post:
+      tags: [Me]
+      operationId: confirmPhoneChange
+      summary: Confirma o código e troca o número da conta (RN-06)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, code]
+              properties:
+                challengeId: { type: string }
+                code: { type: string, pattern: '^[0-9]{6}$' }
+      responses:
+        '200':
+          description: Número trocado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Avisos
+  /me/notifications:
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: Avisos da pessoa logada, do mais novo para o mais antigo (RN-110)
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK. Avisos repetidos já vêm agrupados (`count` > 1).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationPage' }
+
+  /me/notifications/read:
+    post:
+      tags: [Notifications]
+      operationId: markNotificationsRead
+      summary: Marca avisos como lidos (todos, se `ids` não vier)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids: { type: array, items: { type: string } }
+      responses:
+        '204': { description: Marcados }
+
+  /me/notification-settings:
+    get:
+      tags: [Notifications]
+      operationId: getNotificationSettings
+      summary: Os 5 interruptores de avisos (Ajustes)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationSettings' }
+    patch:
+      tags: [Notifications]
+      operationId: updateNotificationSettings
+      summary: Liga ou desliga um grupo de avisos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NotificationSettingsPatch' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/NotificationSettings' }
+
+  /nicknames/{nickname}/availability:
+    get:
+      tags: [Me]
+      operationId: checkNickname
+      summary: Confere se o nickname está livre (RN-03)
+      parameters:
+        - { name: nickname, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [available, suggestions]
+                properties:
+                  available: { type: boolean }
+                  suggestions: { type: array, maxItems: 3, items: { type: string } }
+
+  # ───────────────────────────── Sports
+  /sports:
+    get:
+      tags: [Sports]
+      operationId: listSports
+      summary: Catálogo de modalidades, posições e níveis
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Sport' }
+
+  # ───────────────────────────── Groups
+  /groups:
+    post:
+      tags: [Groups]
+      operationId: createGroup
+      summary: Cria uma turma (RN-10)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupInput' }
+      responses:
+        '201':
+          description: Criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      operationId: getGroup
+      summary: Detalhe da turma (cabeçalho, contadores, regras para o dono)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Groups]
+      operationId: updateGroup
+      summary: Edita dados da turma (dono)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupPatch' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Groups]
+      operationId: archiveGroup
+      summary: Arquiva a turma (RN-11)
+      responses:
+        '204': { description: Arquivada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{groupId}/transfer:
+    post:
+      tags: [Groups]
+      operationId: transferGroup
+      summary: Passa a turma para outro membro, que vira o organizador (RN-11a)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [memberId]
+              properties:
+                memberId: { type: string }
+      responses:
+        '200':
+          description: Turma com o novo dono
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Group' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /groups/{groupId}/rules:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    patch:
+      tags: [Groups]
+      operationId: updateGroupRules
+      summary: Edita as regras da turma (tela Regras da turma)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GroupRulesPatch' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GroupRules' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{groupId}/leave:
+    post:
+      tags: [Members]
+      operationId: leaveGroup
+      summary: Sai da turma (RN-15)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      responses:
+        '204': { description: Saiu }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /groups/{groupId}/members:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Members]
+      operationId: listMembers
+      summary: Jogadores da turma (aba Jogadores)
+      parameters:
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/MembershipType' }
+        - name: q
+          in: query
+          description: Busca por nome ou nickname
+          schema: { type: string }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemberPage' }
+    post:
+      tags: [Members]
+      operationId: addMember
+      summary: Adiciona um usuário já cadastrado pelo nickname (dono; botão "+ Jogador")
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nickname, type]
+              properties:
+                nickname: { $ref: '#/components/schemas/Nickname' }
+                type: { $ref: '#/components/schemas/MembershipType' }
+      responses:
+        '201':
+          description: Adicionado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /groups/{groupId}/members/{memberId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+      - { name: memberId, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Members]
+      operationId: updateMember
+      summary: Troca mensalista/avulso (RN-14) ou define o nível na turma (RN-17)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                type: { $ref: '#/components/schemas/MembershipType' }
+                level: { type: [integer, 'null'], minimum: 1, maximum: 5, description: Nível na turma (RN-17). }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Member' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Members]
+      operationId: removeMember
+      summary: Remove da turma (RN-14)
+      responses:
+        '204': { description: Removido }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Invites
+  /groups/{groupId}/invites:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Invites]
+      operationId: listInvites
+      summary: Convites ativos da turma (dono)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Invite' } }
+    post:
+      tags: [Invites]
+      operationId: createInvite
+      summary: Gera convite para a turma ou para uma partida (RN-12, RN-13)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [membershipType]
+              properties:
+                membershipType: { $ref: '#/components/schemas/MembershipType' }
+                matchId: { type: string, description: Convida avulso direto para esta partida. }
+                expiresAt: { type: string, format: date-time }
+                maxUses: { type: integer, minimum: 1 }
+                note: { type: string, maxLength: 60, description: 'Rótulo para o dono, ex.: "Bruno Martins".' }
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invite' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /invites/{code}:
+    parameters:
+      - $ref: '#/components/parameters/InviteCode'
+    get:
+      tags: [Invites]
+      operationId: getInvitePreview
+      summary: Prévia pública do convite (funciona sem login)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitePreview' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Invites]
+      operationId: revokeInvite
+      summary: Revoga o convite (dono)
+      responses:
+        '204': { description: Revogado }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /invites/{code}/accept:
+    post:
+      tags: [Invites]
+      operationId: acceptInvite
+      summary: Aceita o convite e entra na turma (e na partida, se houver)
+      parameters:
+        - $ref: '#/components/parameters/InviteCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [groupId, alreadyMember]
+                properties:
+                  groupId: { type: string }
+                  alreadyMember: { type: boolean }
+                  participation:
+                    oneOf:
+                      - $ref: '#/components/schemas/Participation'
+                      - type: 'null'
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Matches
+  /groups/{groupId}/matches:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Matches]
+      operationId: listGroupMatches
+      summary: Partidas da turma (aba Partidas da turma)
+      parameters:
+        - name: scope
+          in: query
+          schema: { type: string, enum: [upcoming, past], default: upcoming }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MatchSummaryPage' }
+    post:
+      tags: [Matches]
+      operationId: createMatch
+      summary: Cria partida (rascunho ou já publicada)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MatchInput' }
+      responses:
+        '201':
+          description: Criada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /matches/{matchId}:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [Matches]
+      operationId: getMatch
+      summary: Detalhe da partida com contadores, minha presença e permissões
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Matches]
+      operationId: updateMatch
+      summary: Edita a partida (dono; RN-27 para capacidade)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MatchPatch' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Match' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/publish:
+    post:
+      tags: [Matches]
+      operationId: publishMatch
+      summary: Publica (draft → open; RN-20)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/unpublish:
+    post:
+      tags: [Matches]
+      operationId: unpublishMatch
+      summary: Desfaz a publicação (open → draft) enquanto ninguém respondeu (RN-20a)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/reminders:
+    post:
+      tags: [Notifications]
+      operationId: remindParticipants
+      summary: Lembra quem não respondeu — todos de uma vez ou um por um (RN-111)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userIds: { type: array, items: { type: string }, description: 'Sem a lista, lembra todos os sem resposta.' }
+      responses:
+        '201':
+          description: Lembretes enviados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReminderReceipt' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /reminders/{reminderId}:
+    delete:
+      tags: [Notifications]
+      operationId: undoReminder
+      summary: Desfaz um lembrete ou cobrança (apaga os avisos ainda não lidos; RN-111)
+      parameters:
+        - { name: reminderId, in: path, required: true, schema: { type: string } }
+      responses:
+        '204': { description: Desfeito }
+
+  /matches/{matchId}/close:
+    post:
+      tags: [Matches]
+      operationId: closeMatch
+      summary: Fecha a lista (open → closed; RN-40)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/reopen:
+    post:
+      tags: [Matches]
+      operationId: reopenMatch
+      summary: Reabre a lista (closed → open; RN-41)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/start:
+    post:
+      tags: [Matches]
+      operationId: startMatch
+      summary: Inicia a partida (RN-42)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/finish:
+    post:
+      tags: [Matches]
+      operationId: finishMatch
+      summary: Finaliza a partida (RN-42)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/cancel:
+    post:
+      tags: [Matches]
+      operationId: cancelMatch
+      summary: Cancela a partida (RN-43)
+      parameters: [ { $ref: '#/components/parameters/MatchId' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 200 }
+      responses:
+        '200': { $ref: '#/components/responses/MatchOk' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Attendance
+  /matches/{matchId}/participations:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [Attendance]
+      operationId: listParticipations
+      summary: Presenças da partida (tela Presenças e "Ver lista")
+      description: Membros veem confirmados e fila. O dono vê todos os estados, incluindo pagamentos a validar.
+      parameters:
+        - name: status
+          in: query
+          schema: { type: array, items: { $ref: '#/components/schemas/ParticipationStatus' } }
+          style: form
+          explode: false
+      responses:
+        '200':
+          description: OK (fila ordenada por posição; demais por nome)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, counts]
+                properties:
+                  counts: { $ref: '#/components/schemas/MatchCounts' }
+                  items: { type: array, items: { $ref: '#/components/schemas/Participation' } }
+    post:
+      tags: [Attendance]
+      operationId: addParticipation
+      summary: Dono adiciona um membro direto como confirmado (RN-26)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string }
+      responses:
+        '201':
+          description: Adicionado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participation' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/participations/me:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    put:
+      tags: [Attendance]
+      operationId: respondToMatch
+      summary: '"Vou jogar" / "Não vou" — mensalista e avulso (RN-22, RN-23, RN-28)'
+      description: |
+        `going` para o mensalista confirma; para o avulso entra na vaga (aguardando pagamento) ou na fila.
+        `not_going` recusa, desiste ou sai da fila. A resposta traz o estado final — o front não deve presumir.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response: { type: string, enum: [going, not_going] }
+      responses:
+        '200':
+          description: Estado final da minha presença e contadores atualizados
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [participation, counts]
+                properties:
+                  participation: { $ref: '#/components/schemas/Participation' }
+                  counts: { $ref: '#/components/schemas/MatchCounts' }
+                  outcome:
+                    type: string
+                    enum: [confirmed, awaiting_payment, waitlisted, declined, left]
+                    description: Útil para escolher a mensagem do toast.
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/participations/{participationId}/promote:
+    post:
+      tags: [Attendance]
+      operationId: promoteParticipation
+      summary: Dono sobe alguém da fila para a vaga livre (RN-31, modo manual)
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+        - $ref: '#/components/parameters/ParticipationId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Participation' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/participations/{participationId}:
+    delete:
+      tags: [Attendance]
+      operationId: removeParticipation
+      summary: Dono remove alguém da partida (libera a vaga)
+      parameters:
+        - $ref: '#/components/parameters/MatchId'
+        - $ref: '#/components/parameters/ParticipationId'
+      responses:
+        '204': { description: Removido }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ───────────────────────────── Payments
+  /groups/{groupId}/payments:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Payments]
+      operationId: listGroupPayments
+      summary: "Cobranças da turma (dono). Ex.: status=reported para Pagamentos a validar"
+      parameters:
+        - name: status
+          in: query
+          schema: { type: array, items: { $ref: '#/components/schemas/PaymentStatus' } }
+          style: form
+          explode: false
+        - name: kind
+          in: query
+          schema: { $ref: '#/components/schemas/PaymentKind' }
+        - name: matchId
+          in: query
+          schema: { type: string }
+        - name: month
+          in: query
+          schema: { $ref: '#/components/schemas/YearMonth' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaymentPage' }
+    post:
+      tags: [Payments]
+      operationId: registerPayment
+      summary: Dono registra um pagamento já recebido (RN-64)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, kind, amountCents, method]
+              properties:
+                userId: { type: string }
+                kind: { $ref: '#/components/schemas/PaymentKind' }
+                matchId: { type: string }
+                referenceMonth: { $ref: '#/components/schemas/YearMonth' }
+                amountCents: { $ref: '#/components/schemas/Cents' }
+                method: { $ref: '#/components/schemas/PaymentMethod' }
+      responses:
+        '201':
+          description: Registrado como pago
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /groups/{groupId}/monthly-fees:
+    post:
+      tags: [Payments]
+      operationId: generateMonthlyFees
+      summary: Gera as mensalidades do mês para os mensalistas (RN-63, idempotente)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [month]
+              properties:
+                month: { $ref: '#/components/schemas/YearMonth' }
+      responses:
+        '200':
+          description: Resultado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [created, alreadyExisting]
+                properties:
+                  created: { type: integer }
+                  alreadyExisting: { type: integer }
+
+  /payments/{paymentId}/report:
+    post:
+      tags: [Payments]
+      operationId: reportPayment
+      summary: Jogador avisa que pagou ("Já fiz o Pix"; RN-61)
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                note: { type: string, maxLength: 140 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /payments/{paymentId}/approve:
+    post:
+      tags: [Payments]
+      operationId: approvePayment
+      summary: Dono valida (RN-62)
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { $ref: '#/components/schemas/PaymentMethod' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /payments/{paymentId}/reject:
+    post:
+      tags: [Payments]
+      operationId: rejectPayment
+      summary: Dono recusa com motivo (RN-62)
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 140 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /payments/{paymentId}/charge:
+    post:
+      tags: [Payments]
+      operationId: chargePayment
+      summary: Cobra uma mensalidade atrasada — manda um aviso para a pessoa (RN-65)
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '201':
+          description: Cobrança enviada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReminderReceipt' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /payments/{paymentId}/receive:
+    post:
+      tags: [Payments]
+      operationId: receivePayment
+      summary: '"Recebi em mãos" — o dono marca uma cobrança pendente como paga (RN-64)'
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                method: { $ref: '#/components/schemas/PaymentMethod' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /payments/{paymentId}/undo:
+    post:
+      tags: [Payments]
+      operationId: undoPaymentReview
+      summary: Desfaz a última decisão do dono (aprovar, recusar ou recebi em mãos; RN-66)
+      description: O pagamento volta ao estado anterior. Se já tinha entrado no caixa, o caixa ganha um estorno — nada é apagado.
+      parameters:
+        - $ref: '#/components/parameters/PaymentId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Payment' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Finance
+  /groups/{groupId}/finance/summary:
+    get:
+      tags: [Finance]
+      operationId: getFinanceSummary
+      summary: Saldo, recebido no mês, a receber e série mensal (RN-71)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: month
+          in: query
+          description: Mês de referência (padrão, o atual no fuso da turma)
+          schema: { $ref: '#/components/schemas/YearMonth' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FinanceSummary' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{groupId}/finance/entries:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Finance]
+      operationId: listLedgerEntries
+      summary: Movimentações do caixa (mais recentes primeiro)
+      parameters:
+        - name: month
+          in: query
+          schema: { $ref: '#/components/schemas/YearMonth' }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, nextCursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/LedgerEntry' } }
+                  nextCursor: { type: [string, 'null'] }
+    post:
+      tags: [Finance]
+      operationId: createLedgerEntry
+      summary: Lançamento manual (botão "+ Lançamento"; RN-70)
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [direction, amountCents, description, occurredOn, category]
+              properties:
+                direction: { type: string, enum: [in, out] }
+                amountCents: { $ref: '#/components/schemas/Cents' }
+                description: { type: string, minLength: 2, maxLength: 80 }
+                occurredOn: { type: string, format: date }
+                category: { $ref: '#/components/schemas/LedgerCategory' }
+      responses:
+        '201':
+          description: Criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LedgerEntry' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+
+  /groups/{groupId}/finance/entries/export:
+    get:
+      tags: [Finance]
+      operationId: exportLedger
+      summary: Exporta o extrato em CSV (separado por ponto e vírgula, para abrir no Excel)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - name: month
+          in: query
+          description: Sem o mês, exporta tudo.
+          schema: { $ref: '#/components/schemas/YearMonth' }
+      responses:
+        '200':
+          description: Arquivo CSV
+          content:
+            text/csv:
+              schema: { type: string }
+
+  /groups/{groupId}/finance/entries/{entryId}/reverse:
+    post:
+      tags: [Finance]
+      operationId: reverseLedgerEntry
+      summary: Estorna um lançamento — cria o lançamento contrário; nada é apagado (RN-70)
+      parameters:
+        - $ref: '#/components/parameters/GroupId'
+        - { name: entryId, in: path, required: true, schema: { type: string } }
+      responses:
+        '201':
+          description: Estorno criado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LedgerEntry' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  # ───────────────────────────── Modo ao vivo (RN-100 a RN-108)
+  /matches/{matchId}/live:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [Live]
+      operationId: getLiveState
+      summary: Estado do modo ao vivo (só o organizador)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LiveState' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Live]
+      operationId: startLive
+      summary: Entra no modo ao vivo; a partida passa a "em jogo" (RN-100)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LiveState' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/live/arrivals/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+      - { name: userId, in: path, required: true, schema: { type: string } }
+    put:
+      tags: [Live]
+      operationId: setArrival
+      summary: Marca ou desmarca a chegada de um confirmado (RN-101)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [arrived]
+              properties:
+                arrived: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [arrivedUserIds]
+                properties:
+                  arrivedUserIds: { type: array, items: { type: string } }
+
+  /matches/{matchId}/live/draws:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    post:
+      tags: [Live]
+      operationId: createLiveDraw
+      summary: Sorteia times entre quem chegou, quantas vezes quiser (RN-102 a RN-104)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LiveDrawInput' }
+      responses:
+        '201':
+          description: Times sorteados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LiveDraw' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/live/rounds:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    post:
+      tags: [Live]
+      operationId: finishRound
+      summary: Encerra uma rodada e guarda placar, pontos e vitória (RN-105 a RN-107)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoundInput' }
+      responses:
+        '201':
+          description: Rodada salva
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Round' }
+        '422': { $ref: '#/components/responses/BusinessRuleError' }
+
+  /matches/{matchId}/day-summary:
+    parameters:
+      - $ref: '#/components/parameters/MatchId'
+    get:
+      tags: [Live]
+      operationId: getDaySummary
+      summary: Histórico do dia — rodadas, grupos, vitórias, pontos e MVP (RN-108)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DaySummary' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    GroupId: { name: groupId, in: path, required: true, schema: { type: string } }
+    MatchId: { name: matchId, in: path, required: true, schema: { type: string } }
+    ParticipationId: { name: participationId, in: path, required: true, schema: { type: string } }
+    PaymentId: { name: paymentId, in: path, required: true, schema: { type: string } }
+    InviteCode: { name: code, in: path, required: true, schema: { type: string, pattern: '^[A-HJ-NP-Z2-9]{6,10}$' } }
+    Cursor: { name: cursor, in: query, schema: { type: string } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema: { type: string, format: uuid }
+
+  responses:
+    MatchOk:
+      description: Partida no novo estado
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Match' }
+    ValidationError:
+      description: Dados inválidos (`VALIDATION_ERROR`, com `fields`)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    BusinessRuleError:
+      description: Regra de negócio impediu a ação (ver `code`)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: "Conflito, ex.: NICKNAME_TAKEN ou ALREADY_MEMBER"
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Unauthenticated:
+      description: Sem sessão válida
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Sem permissão
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Não existe ou não é visível para quem pergunta
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RateLimited:
+      description: Muitas tentativas; ver header Retry-After
+      headers:
+        Retry-After: { schema: { type: integer } }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+    # ── Básicos
+    Phone: { type: string, pattern: '^\+[1-9][0-9]{10,14}$', examples: ['+5521998765432'] }
+    PersonName: { type: string, minLength: 2, maxLength: 60 }
+    Nickname: { type: string, pattern: '^[a-z0-9._]{3,20}$' }
+    Cents: { type: integer, minimum: 0, description: Valor em centavos de real. }
+    YearMonth: { type: string, pattern: '^[0-9]{4}-(0[1-9]|1[0-2])$', examples: ['2026-09'] }
+    MembershipType: { type: string, enum: [monthly, drop_in] }
+    Role: { type: string, enum: [owner, player] }
+    ParticipationStatus:
+      type: string
+      enum: [pending, confirmed, declined, awaiting_payment, waitlisted, expired, left, removed]
+    MatchStatus:
+      type: string
+      enum: [draft, open, closed, in_progress, finished, cancelled]
+    PaymentStatus: { type: string, enum: [pending, reported, paid, rejected, cancelled] }
+    PaymentKind: { type: string, enum: [match_fee, monthly_fee] }
+    PaymentMethod: { type: string, enum: [pix, cash, other] }
+    Permission:
+      type: string
+      description: Ações que o `viewer` pode fazer neste recurso.
+      enum:
+        - group.edit
+        - group.invite
+        - group.manage_members
+        - group.view_finance
+        - match.create
+        - match.manage
+        - attendance.manage
+        - payment.review
+        - live.manage
+
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri-reference, examples: ['https://docs.example.com/errors/MATCH_FULL'] }
+        title: { type: string }
+        status: { type: integer }
+        code:
+          type: string
+          description: Código estável que o front traduz.
+          enum:
+            - VALIDATION_ERROR
+            - UNAUTHENTICATED
+            - FORBIDDEN
+            - NOT_FOUND
+            - RATE_LIMITED
+            - OTP_INVALID
+            - OTP_EXPIRED
+            - OTP_TOO_MANY_ATTEMPTS
+            - TERMS_UPDATE_REQUIRED
+            - PROFILE_INCOMPLETE
+            - NICKNAME_TAKEN
+            - USER_NOT_FOUND
+            - ALREADY_MEMBER
+            - OWNER_CANNOT_LEAVE
+            - OWNER_HAS_ACTIVE_GROUPS
+            - INVITE_INVALID
+            - MATCH_NOT_OPEN
+            - MATCH_INVALID_TRANSITION
+            - DEADLINE_AFTER_START
+            - CAPACITY_BELOW_OCCUPIED
+            - NO_FREE_SPOT
+            - NOT_ON_WAITLIST
+            - PAYMENTS_TO_REVIEW
+            - PAYMENT_INVALID_TRANSITION
+            - PAYMENT_WINDOW_EXPIRED
+            - NOT_ENOUGH_PLAYERS
+            - ROUND_TIED
+            - LIVE_NOT_AVAILABLE
+            - LEDGER_ENTRY_NOT_MANUAL
+            - LEDGER_ENTRY_ALREADY_REVERSED
+            - LIST_NOT_OPEN_YET
+            - ALREADY_ANSWERED
+            - PHONE_IN_USE
+            - NOT_A_MEMBER
+        detail: { type: string, description: Explicação para desenvolvedores; o front não exibe. }
+        fields:
+          type: object
+          description: Erros por campo (`VALIDATION_ERROR`), chave = caminho do campo.
+          additionalProperties: { type: string }
+        rule: { type: string, examples: ['RN-40'] }
+
+    # ── Auth e conta
+    OtpChallenge:
+      type: object
+      required: [challengeId, expiresAt, resendAvailableAt, channel]
+      properties:
+        challengeId: { type: string }
+        channel: { type: string, enum: [whatsapp, sms] }
+        expiresAt: { type: string, format: date-time }
+        resendAvailableAt: { type: string, format: date-time }
+    AuthSession:
+      type: object
+      required: [accessToken, expiresIn, user]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer, description: Segundos. }
+        refreshToken: { type: string, description: Ausente quando entregue por cookie. }
+        user: { $ref: '#/components/schemas/Me' }
+    UserSummary:
+      type: object
+      required: [id, name, nickname]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        nickname: { type: string }
+        photoUrl: { type: [string, 'null'], format: uri }
+        primaryPosition: { type: [string, 'null'], description: Id da posição principal na modalidade da turma. }
+        level: { type: [integer, 'null'] }
+    Me:
+      type: object
+      required: [id, phone, name, nickname, profileCompleted, sportProfiles, termsVersion]
+      properties:
+        id: { type: string }
+        phone: { $ref: '#/components/schemas/Phone' }
+        name: { type: string }
+        nickname: { type: string }
+        photoUrl: { type: [string, 'null'], format: uri }
+        profileCompleted: { type: boolean }
+        termsVersion: { type: [string, 'null'] }
+        termsAcceptedAt: { type: [string, 'null'], format: date-time }
+        gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
+        sportProfiles: { type: array, items: { $ref: '#/components/schemas/SportProfile' } }
+    DataExport:
+      type: object
+      required: [generatedAt, account, memberships, participations, payments]
+      properties:
+        generatedAt: { type: string, format: date-time }
+        termsVersion: { type: [string, 'null'] }
+        account: { $ref: '#/components/schemas/Me' }
+        memberships:
+          type: array
+          items:
+            type: object
+            required: [groupName, type, role, joinedAt]
+            properties:
+              groupName: { type: string }
+              type: { $ref: '#/components/schemas/MembershipType' }
+              role: { $ref: '#/components/schemas/Role' }
+              joinedAt: { type: string, format: date-time }
+        participations:
+          type: array
+          items:
+            type: object
+            required: [matchTitle, startsAt, status]
+            properties:
+              matchTitle: { type: string }
+              groupName: { type: string }
+              startsAt: { type: string, format: date-time }
+              status: { $ref: '#/components/schemas/ParticipationStatus' }
+        payments:
+          type: array
+          items: { $ref: '#/components/schemas/Payment' }
+    Sport:
+      type: object
+      required: [id, name, positions, levels, defaultTeamSize]
+      properties:
+        id: { type: string, examples: [volleyball] }
+        name: { type: string, examples: ['Vôlei'] }
+        defaultTeamSize: { type: integer }
+        positions:
+          type: array
+          items:
+            type: object
+            required: [id, label, short]
+            properties:
+              id: { type: string }
+              label: { type: string }
+              short: { type: string }
+        levels:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value: { type: integer }
+              label: { type: string }
+    SportProfileInput:
+      type: object
+      required: [sportId, positions]
+      properties:
+        sportId: { type: string }
+        positions: { type: array, minItems: 1, maxItems: 3, items: { type: string } }
+    Gender:
+      type: string
+      enum: [male, female]
+      description: Opcional; só masculino ou feminino. Usado apenas no sorteio misto (RN-03a).
+    SportProfile:
+      allOf:
+        - $ref: '#/components/schemas/SportProfileInput'
+
+    # ── Turmas
+    Location:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, maxLength: 80 }
+        address: { type: [string, 'null'], maxLength: 160 }
+        mapsUrl: { type: [string, 'null'], format: uri }
+    Pix:
+      type: object
+      required: [key, holderName]
+      properties:
+        key: { type: string, maxLength: 77 }
+        holderName: { type: string, maxLength: 60 }
+        bank: { type: [string, 'null'], maxLength: 40 }
+    GroupRules:
+      type: object
+      required: [waitlistAutoPromote, dropInPaymentWindowMinutes, monthlyResponseDeadline, autoReleaseUnanswered, listOpens, withdrawalDeadlineHours]
+      properties:
+        waitlistAutoPromote: { type: boolean, description: 'Quem desiste é trocado automaticamente pelo 1º da fila (RN-31).' }
+        dropInPaymentWindowMinutes: { type: integer, minimum: 15, maximum: 2880, description: Tempo do avulso para pagar depois de pegar a vaga (RN-24). }
+        monthlyResponseDeadline:
+          description: Até quando a vaga do mensalista fica reservada — a prioridade do mensalista (RN-20).
+          type: object
+          required: [daysBefore, time]
+          properties:
+            daysBefore: { type: integer, minimum: 0, maximum: 7 }
+            time: { $ref: '#/components/schemas/ClockTime' }
+        autoReleaseUnanswered: { type: boolean }
+        listOpens:
+          description: Quando a lista abre para respostas, contado do início do jogo (RN-20b). Novo na 2.0.
+          type: object
+          required: [daysBefore, time]
+          properties:
+            daysBefore: { type: integer, minimum: 0, maximum: 14 }
+            time: { $ref: '#/components/schemas/ClockTime' }
+        withdrawalDeadlineHours:
+          type: integer
+          minimum: 0
+          maximum: 168
+          description: Até quantas horas antes dá para desistir sem penalidade; depois fica registrado como desistência tardia (RN-28a). Novo na 2.0.
+    GroupRulesPatch:
+      type: object
+      minProperties: 1
+      properties:
+        waitlistAutoPromote: { type: boolean }
+        dropInPaymentWindowMinutes: { type: integer, minimum: 15, maximum: 2880 }
+        monthlyResponseDeadline: { $ref: '#/components/schemas/GroupRules/properties/monthlyResponseDeadline' }
+        autoReleaseUnanswered: { type: boolean }
+        listOpens: { $ref: '#/components/schemas/GroupRules/properties/listOpens' }
+        withdrawalDeadlineHours: { $ref: '#/components/schemas/GroupRules/properties/withdrawalDeadlineHours' }
+    ClockTime: { type: string, pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$', examples: ['09:00'] }
+    Schedule:
+      type: object
+      description: Um dia fixo da turma e o horário desse dia ("Todo sábado, 9h às 11h").
+      required: [weekday, startTime, endTime]
+      properties:
+        weekday: { type: integer, minimum: 0, maximum: 6, description: '0 = domingo.' }
+        startTime: { $ref: '#/components/schemas/ClockTime' }
+        endTime: { $ref: '#/components/schemas/ClockTime' }
+    GroupInput:
+      type: object
+      required: [name, sportId, location, defaultCapacity, monthlyFeeCents, dropInFeeCents]
+      properties:
+        name: { type: string, minLength: 3, maxLength: 60 }
+        sportId: { type: string }
+        location: { $ref: '#/components/schemas/Location' }
+        schedules:
+          type: array
+          maxItems: 7
+          description: Dias fixos da turma, cada um com o seu horário (no máximo um por dia da semana). Vazio = a combinar.
+          items: { $ref: '#/components/schemas/Schedule' }
+        defaultCapacity: { type: integer, minimum: 2, maximum: 60 }
+        monthlyFeeCents: { $ref: '#/components/schemas/Cents' }
+        monthlyFeeDueDay: { type: integer, minimum: 1, maximum: 28, default: 10 }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        pix: { $ref: '#/components/schemas/Pix' }
+        rules: { $ref: '#/components/schemas/GroupRulesPatch' }
+        timezone: { type: string, default: America/Sao_Paulo }
+    GroupPatch:
+      type: object
+      minProperties: 1
+      properties:
+        name: { type: string, minLength: 3, maxLength: 60 }
+        location: { $ref: '#/components/schemas/Location' }
+        schedules:
+          type: array
+          maxItems: 7
+          description: Dias fixos da turma, cada um com o seu horário (no máximo um por dia da semana). Vazio = a combinar.
+          items: { $ref: '#/components/schemas/Schedule' }
+        defaultCapacity: { type: integer, minimum: 2, maximum: 60 }
+        monthlyFeeCents: { $ref: '#/components/schemas/Cents' }
+        monthlyFeeDueDay: { type: integer, minimum: 1, maximum: 28 }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        pix: { $ref: '#/components/schemas/Pix' }
+    Viewer:
+      type: object
+      required: [role, membershipType, permissions]
+      properties:
+        role: { $ref: '#/components/schemas/Role' }
+        membershipType: { $ref: '#/components/schemas/MembershipType' }
+        permissions: { type: array, items: { $ref: '#/components/schemas/Permission' } }
+    GroupSummary:
+      type: object
+      required: [id, name, sportId, memberCount, defaultCapacity, viewer]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sportId: { type: string }
+        memberCount: { type: integer }
+        defaultCapacity: { type: integer }
+        location: { $ref: '#/components/schemas/Location' }
+        schedules:
+          type: array
+          maxItems: 7
+          description: Dias fixos da turma, cada um com o seu horário (no máximo um por dia da semana). Vazio = a combinar.
+          items: { $ref: '#/components/schemas/Schedule' }
+        nextMatch:
+          oneOf:
+            - $ref: '#/components/schemas/MatchSummary'
+            - type: 'null'
+        pendings:
+          description: Só para o dono (aba Organizar, RN-18). Null para jogadores.
+          oneOf:
+            - $ref: '#/components/schemas/GroupPendings'
+            - type: 'null'
+        viewer: { $ref: '#/components/schemas/Viewer' }
+    GroupPendings:
+      type: object
+      description: O que o organizador precisa resolver (RN-18). Sorteio não é pendência.
+      required: [total, paymentsToReview, overdueFees, unanswered, waitlisted, toPublish, toClose]
+      properties:
+        total: { type: integer }
+        paymentsToReview: { type: integer, description: Pix informados aguardando validação. }
+        overdueFees: { type: integer, description: Mensalidades do mês ainda pendentes. }
+        unanswered: { type: integer, description: Mensalistas sem resposta na partida da vez. }
+        waitlisted: { type: integer, description: 'Na fila da partida da vez, com vaga livre (promoção manual).' }
+        toPublish: { type: integer, description: Partidas em rascunho. }
+        toClose: { type: integer, description: Partida da vez com prazo vencido e lista ainda aberta. }
+        focusMatchId: { type: [string, 'null'], description: Partida mais próxima (a turma abre nela). }
+    Group:
+      type: object
+      required: [id, name, sportId, owner, location, defaultCapacity, monthlyFeeCents, dropInFeeCents, timezone, memberCount, monthlyCount, dropInCount, viewer]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        sportId: { type: string }
+        owner: { $ref: '#/components/schemas/UserSummary' }
+        location: { $ref: '#/components/schemas/Location' }
+        schedules:
+          type: array
+          maxItems: 7
+          description: Dias fixos da turma, cada um com o seu horário (no máximo um por dia da semana). Vazio = a combinar.
+          items: { $ref: '#/components/schemas/Schedule' }
+        defaultCapacity: { type: integer }
+        monthlyFeeCents: { $ref: '#/components/schemas/Cents' }
+        monthlyFeeDueDay: { type: integer }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        publicRules:
+          description: Regras em linguagem simples, para todos os membros (turma como jogador).
+          $ref: '#/components/schemas/PublicRules'
+        pix:
+          oneOf:
+            - $ref: '#/components/schemas/Pix'
+            - type: 'null'
+        timezone: { type: string }
+        memberCount: { type: integer }
+        monthlyCount: { type: integer }
+        dropInCount: { type: integer }
+        rules:
+          description: Presente só para o dono.
+          oneOf:
+            - $ref: '#/components/schemas/GroupRules'
+            - type: 'null'
+        viewer: { $ref: '#/components/schemas/Viewer' }
+        archivedAt: { type: [string, 'null'], format: date-time }
+    PublicRules:
+      type: object
+      required: [listOpens, monthlyResponseDeadline, withdrawalDeadlineHours, dropInPaymentWindowMinutes]
+      properties:
+        listOpens: { $ref: '#/components/schemas/GroupRules/properties/listOpens' }
+        monthlyResponseDeadline: { $ref: '#/components/schemas/GroupRules/properties/monthlyResponseDeadline' }
+        withdrawalDeadlineHours: { type: integer }
+        dropInPaymentWindowMinutes: { type: integer }
+    Member:
+      type: object
+      required: [id, user, role, type, joinedAt]
+      properties:
+        id: { type: string, description: Id do vínculo. }
+        user: { $ref: '#/components/schemas/UserSummary' }
+        phone:
+          description: Só para o dono (RN-16).
+          oneOf:
+            - $ref: '#/components/schemas/Phone'
+            - type: 'null'
+        role: { $ref: '#/components/schemas/Role' }
+        type: { $ref: '#/components/schemas/MembershipType' }
+        joinedAt: { type: string, format: date-time }
+        level:
+          description: Nível na turma, definido pelo organizador (RN-17). Null = não definido (vale 3 no sorteio). Só para o dono.
+          type: [integer, 'null']
+          minimum: 1
+          maximum: 5
+        gender:
+          description: Gênero informado pelo jogador. Só para o dono e o próprio.
+          oneOf:
+            - $ref: '#/components/schemas/Gender'
+            - type: 'null'
+        monthlyFeeStatus:
+          description: Situação da mensalidade do mês atual (só mensalistas; só para o dono e o próprio).
+          oneOf:
+            - $ref: '#/components/schemas/PaymentStatus'
+            - type: 'null'
+        attendanceRate:
+          description: Frequência nos jogos da turma (0 a 1). Só para o dono.
+          type: [number, 'null']
+        monthsOnTime:
+          description: Meses seguidos com a mensalidade em dia. Só para o dono.
+          type: [integer, 'null']
+    MemberPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Member' } }
+        nextCursor: { type: [string, 'null'] }
+
+    # ── Convites
+    Invite:
+      type: object
+      required: [code, url, groupId, membershipType, uses, createdAt]
+      properties:
+        code: { type: string }
+        url: { type: string, format: uri, description: Link para compartilhar e gerar o QR Code. }
+        groupId: { type: string }
+        matchId: { type: [string, 'null'] }
+        membershipType: { $ref: '#/components/schemas/MembershipType' }
+        note: { type: [string, 'null'] }
+        uses: { type: integer }
+        maxUses: { type: [integer, 'null'] }
+        expiresAt: { type: [string, 'null'], format: date-time }
+        createdAt: { type: string, format: date-time }
+    InvitePreview:
+      type: object
+      required: [valid, group, invitedBy, membershipType]
+      properties:
+        valid: { type: boolean }
+        invalidReason: { type: [string, 'null'], enum: [revoked, expired, exhausted, null] }
+        membershipType: { $ref: '#/components/schemas/MembershipType' }
+        invitedBy: { type: string, description: Nome do dono. }
+        group:
+          type: object
+          required: [name, sportId, location, memberCount]
+          properties:
+            name: { type: string }
+            sportId: { type: string }
+            location: { $ref: '#/components/schemas/Location' }
+            memberCount: { type: integer }
+            schedules:
+              type: array
+              maxItems: 7
+              description: Dias fixos da turma, cada um com o seu horário (no máximo um por dia da semana). Vazio = a combinar.
+              items: { $ref: '#/components/schemas/Schedule' }
+            dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+            monthlyFeeCents: { $ref: '#/components/schemas/Cents' }
+        match:
+          description: Partida do convite ou próxima partida da turma.
+          oneOf:
+            - type: object
+              required: [title, startsAt, freeSpots, dropInFeeCents]
+              properties:
+                title: { type: string }
+                startsAt: { type: string, format: date-time }
+                capacity: { type: integer }
+                freeSpots: { type: integer }
+                dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+            - type: 'null'
+
+    # ── Partidas
+    MatchCounts:
+      type: object
+      required: [capacity, confirmed, pending, awaitingPayment, waitlisted, declined, freeSpots]
+      properties:
+        capacity: { type: integer }
+        confirmed: { type: integer }
+        pending: { type: integer, description: Mensalistas sem resposta (vaga reservada). }
+        awaitingPayment: { type: integer }
+        waitlisted: { type: integer }
+        declined: { type: integer }
+        freeSpots: { type: integer, description: 'capacity − (confirmed + pending + awaitingPayment), nunca negativo.' }
+        paymentsToReview: { type: integer, description: Só para o dono. }
+    MatchSummary:
+      type: object
+      required: [id, groupId, groupName, title, startsAt, status, counts]
+      properties:
+        id: { type: string }
+        groupId: { type: string }
+        groupName: { type: string }
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        location: { $ref: '#/components/schemas/Location' }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        listOpensAt: { type: [string, 'null'], format: date-time, description: 'Quando a lista abre; antes disso ninguém responde (RN-20b).' }
+        responseDeadline: { type: string, format: date-time, description: Prioridade do mensalista até aqui. }
+        withdrawalDeadline: { type: [string, 'null'], format: date-time, description: Desistir sem penalidade até aqui (RN-28a). }
+        status: { $ref: '#/components/schemas/MatchStatus' }
+        counts: { $ref: '#/components/schemas/MatchCounts' }
+        repeatsWeekly: { type: boolean }
+        myParticipation:
+          description: Minha presença completa (aba Jogos — a ação fica no card).
+          oneOf:
+            - $ref: '#/components/schemas/Participation'
+            - type: 'null'
+        myHistory:
+          description: Só no histórico (scope=history).
+          oneOf:
+            - $ref: '#/components/schemas/MyHistory'
+            - type: 'null'
+        myStatus:
+          description: Minha presença, se houver.
+          oneOf:
+            - $ref: '#/components/schemas/ParticipationStatus'
+            - type: 'null'
+    MatchSummaryPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/MatchSummary' } }
+        nextCursor: { type: [string, 'null'] }
+    MatchInput:
+      type: object
+      required: [title, startsAt, endsAt]
+      properties:
+        title: { type: string, minLength: 3, maxLength: 60 }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        location: { $ref: '#/components/schemas/Location' }
+        capacity: { type: integer, minimum: 2, maximum: 60, description: Padrão da turma se omitido. }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        responseDeadline: { type: string, format: date-time, description: Calculado pela regra da turma se omitido. }
+        publish: { type: boolean, default: true }
+        repeatWeekly: { type: boolean, default: false, description: '"Repetir todo sábado": cria os próximos jogos sozinho (RN-20c).' }
+    MatchPatch:
+      type: object
+      minProperties: 1
+      properties:
+        title: { type: string, minLength: 3, maxLength: 60 }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        location: { $ref: '#/components/schemas/Location' }
+        capacity: { type: integer, minimum: 2, maximum: 60 }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        responseDeadline: { type: string, format: date-time }
+        repeatWeekly: { type: boolean }
+    Match:
+      type: object
+      required: [id, group, title, startsAt, endsAt, location, capacity, dropInFeeCents, responseDeadline, status, counts, viewer]
+      properties:
+        id: { type: string }
+        group:
+          type: object
+          required: [id, name, sportId]
+          properties:
+            id: { type: string }
+            name: { type: string }
+            sportId: { type: string }
+            pix:
+              description: Para quem precisa pagar.
+              oneOf:
+                - $ref: '#/components/schemas/Pix'
+                - type: 'null'
+        title: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        location: { $ref: '#/components/schemas/Location' }
+        capacity: { type: integer }
+        dropInFeeCents: { $ref: '#/components/schemas/Cents' }
+        responseDeadline: { type: string, format: date-time }
+        listOpensAt: { type: [string, 'null'], format: date-time }
+        withdrawalDeadline: { type: [string, 'null'], format: date-time }
+        repeatsWeekly: { type: boolean }
+        status: { $ref: '#/components/schemas/MatchStatus' }
+        counts: { $ref: '#/components/schemas/MatchCounts' }
+        participantsPreview:
+          description: Até 5 confirmados para a pilha de avatares.
+          type: array
+          maxItems: 5
+          items: { $ref: '#/components/schemas/UserSummary' }
+        myParticipation:
+          oneOf:
+            - $ref: '#/components/schemas/Participation'
+            - type: 'null'
+        viewer: { $ref: '#/components/schemas/Viewer' }
+        cancelReason: { type: [string, 'null'] }
+
+    # ── Presença
+    Participation:
+      type: object
+      required: [id, matchId, user, membershipType, status]
+      properties:
+        id: { type: string }
+        matchId: { type: string }
+        user: { $ref: '#/components/schemas/UserSummary' }
+        membershipType: { $ref: '#/components/schemas/MembershipType' }
+        status: { $ref: '#/components/schemas/ParticipationStatus' }
+        source: { type: string, enum: [auto, self, organizer, invite] }
+        waitlistPosition: { type: [integer, 'null'], description: '1 = primeiro da fila.' }
+        paymentDeadline: { type: [string, 'null'], format: date-time }
+        respondedAt: { type: [string, 'null'], format: date-time }
+        lateWithdrawal: { type: boolean, description: Desistiu depois do prazo sem penalidade (RN-28a). }
+        payment:
+          oneOf:
+            - $ref: '#/components/schemas/Payment'
+            - type: 'null'
+
+    # ── Pagamentos
+    Payment:
+      type: object
+      required: [id, groupId, user, kind, amountCents, status, createdAt]
+      properties:
+        id: { type: string }
+        groupId: { type: string }
+        user: { $ref: '#/components/schemas/UserSummary' }
+        kind: { $ref: '#/components/schemas/PaymentKind' }
+        matchId: { type: [string, 'null'] }
+        referenceMonth:
+          oneOf:
+            - $ref: '#/components/schemas/YearMonth'
+            - type: 'null'
+        amountCents: { $ref: '#/components/schemas/Cents' }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        method:
+          oneOf:
+            - $ref: '#/components/schemas/PaymentMethod'
+            - type: 'null'
+        reportedAt: { type: [string, 'null'], format: date-time }
+        reportNote: { type: [string, 'null'] }
+        reviewedAt: { type: [string, 'null'], format: date-time }
+        rejectionReason: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+    PaymentPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Payment' } }
+        nextCursor: { type: [string, 'null'] }
+
+    # ── Caixa
+    LedgerEntry:
+      type: object
+      required: [id, direction, amountCents, description, occurredOn, source]
+      properties:
+        id: { type: string }
+        direction: { type: string, enum: [in, out] }
+        amountCents: { $ref: '#/components/schemas/Cents' }
+        description: { type: string }
+        occurredOn: { type: string, format: date }
+        source: { type: string, enum: [payment, manual, reversal] }
+        paymentId: { type: [string, 'null'] }
+        category: { $ref: '#/components/schemas/LedgerCategory' }
+        reviewedByName: { type: [string, 'null'], description: 'Quem aprovou, quando veio de um pagamento ("aprovado por você").' }
+        method:
+          oneOf:
+            - $ref: '#/components/schemas/PaymentMethod'
+            - type: 'null'
+        reversalOf: { type: [string, 'null'], description: Lançamento que este estorna. }
+        reversedBy: { type: [string, 'null'], description: 'Estorno deste lançamento, se houver.' }
+    LedgerCategory:
+      type: string
+      enum: [fee, rent, equipment, ball, bibs, party, other]
+      description: 'Mensalidade/avulso (fee), Aluguel, Material, Bola, Coletes, Festa, Outro.'
+    FinanceSummary:
+      type: object
+      required: [month, balanceCents, receivedInMonthCents, receivableCents, series]
+      properties:
+        month: { $ref: '#/components/schemas/YearMonth' }
+        balanceCents: { type: integer, description: Pode ser negativo. }
+        receivedInMonthCents: { $ref: '#/components/schemas/Cents' }
+        spentInMonthCents: { $ref: '#/components/schemas/Cents' }
+        receivableCents: { $ref: '#/components/schemas/Cents' }
+        series:
+          description: Entradas dos últimos 6 meses, do mais antigo ao mês de referência.
+          type: array
+          items:
+            type: object
+            required: [month, inCents, outCents]
+            properties:
+              month: { $ref: '#/components/schemas/YearMonth' }
+              inCents: { $ref: '#/components/schemas/Cents' }
+              outCents: { $ref: '#/components/schemas/Cents' }
+
+    # ── Sorteio
+    # ── Modo ao vivo
+    DrawCriteria:
+      type: object
+      description: Critérios do sorteio; podem ser combinados (RN-103).
+      required: [level, gender, position]
+      properties:
+        level: { type: boolean, description: Equilibra pelo nível que o organizador definiu na turma (sem nível = 3). }
+        gender: { type: boolean, description: Time misto — distribui masculino e feminino por igual. }
+        position: { type: boolean, description: Evita concentrar a mesma posição num time. }
+    LiveDrawInput:
+      type: object
+      required: [teamCount, playersPerTeam, criteria]
+      properties:
+        teamCount: { type: integer, minimum: 2, maximum: 8 }
+        playersPerTeam: { type: integer, minimum: 1, maximum: 12 }
+        criteria: { $ref: '#/components/schemas/DrawCriteria' }
+        clientId: { type: string, description: Id gerado no aparelho; repetir o mesmo id devolve o mesmo sorteio. }
+        teams:
+          description: Times já sorteados no aparelho (dia de jogo sem internet, RN-109). O servidor só confere e guarda.
+          type: array
+          items:
+            type: object
+            required: [memberIds]
+            properties:
+              memberIds: { type: array, items: { type: string } }
+        bench: { type: array, items: { type: string } }
+    LiveTeam:
+      type: object
+      required: [id, name, colorIndex, members]
+      properties:
+        id: { type: string }
+        name: { type: string, examples: ['Time A'] }
+        colorIndex: { type: integer, minimum: 0, maximum: 7 }
+        members: { type: array, items: { $ref: '#/components/schemas/LivePlayer' } }
+    LivePlayer:
+      allOf:
+        - $ref: '#/components/schemas/UserSummary'
+        - type: object
+          properties:
+            gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
+            membershipType: { $ref: '#/components/schemas/MembershipType' }
+            owesCents: { type: [integer, 'null'], description: 'Avulso que ainda deve o jogo ("Deve R$ 25" na chegada).' }
+    LiveDraw:
+      type: object
+      required: [id, createdAt, teamCount, playersPerTeam, criteria, teams, bench]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        teamCount: { type: integer }
+        playersPerTeam: { type: integer }
+        criteria: { $ref: '#/components/schemas/DrawCriteria' }
+        teams: { type: array, items: { $ref: '#/components/schemas/LiveTeam' } }
+        bench: { type: array, description: Quem chegou e sobrou no sorteio, items: { $ref: '#/components/schemas/LivePlayer' } }
+    LiveState:
+      type: object
+      required: [matchId, startedAt, players, arrivedUserIds, lastDrawSettings, currentDraw, rounds]
+      properties:
+        matchId: { type: string }
+        startedAt: { type: [string, 'null'], format: date-time }
+        players: { type: array, description: Confirmados da partida, items: { $ref: '#/components/schemas/LivePlayer' } }
+        arrivedUserIds: { type: array, items: { type: string } }
+        lastDrawSettings: { $ref: '#/components/schemas/LiveDrawInput' }
+        currentDraw: { oneOf: [{ $ref: '#/components/schemas/LiveDraw' }, { type: 'null' }] }
+        rounds: { type: array, items: { $ref: '#/components/schemas/Round' } }
+    RoundInput:
+      type: object
+      required: [drawId, teams]
+      properties:
+        drawId: { type: string }
+        clientId: { type: string, description: Id gerado no aparelho; repetir não cria outra rodada. }
+        teams:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: object
+            required: [teamId, score]
+            properties:
+              teamId: { type: string }
+              score: { type: integer, minimum: 0 }
+        scorers:
+          type: array
+          description: Pontos por jogador, quando a marcação está ligada (RN-106).
+          items:
+            type: object
+            required: [userId, points]
+            properties:
+              userId: { type: string }
+              points: { type: integer, minimum: 1 }
+    Round:
+      type: object
+      required: [id, drawId, number, finishedAt, teams, winnerTeamId, scorers]
+      properties:
+        id: { type: string }
+        drawId: { type: string }
+        number: { type: integer, description: 'Ordem da rodada no dia (1, 2, 3…).' }
+        finishedAt: { type: string, format: date-time }
+        teams:
+          type: array
+          items:
+            type: object
+            required: [teamId, name, colorIndex, score, members]
+            properties:
+              teamId: { type: string }
+              name: { type: string }
+              colorIndex: { type: integer }
+              score: { type: integer }
+              members: { type: array, items: { $ref: '#/components/schemas/UserSummary' } }
+        winnerTeamId: { type: string }
+        scorers:
+          type: array
+          items:
+            type: object
+            required: [userId, points]
+            properties:
+              userId: { type: string }
+              points: { type: integer }
+    DaySummary:
+      type: object
+      required: [matchId, rounds, groups, players, mvp]
+      properties:
+        matchId: { type: string }
+        rounds: { type: array, items: { $ref: '#/components/schemas/Round' } }
+        groups:
+          type: array
+          description: Grupos de pessoas que jogaram juntas no dia; o mesmo grupo soma vitórias (RN-107). Ordenado por vitórias.
+          items:
+            type: object
+            required: [key, members, wins, rounds]
+            properties:
+              key: { type: string, description: 'Ids dos jogadores, ordenados e unidos.' }
+              members: { type: array, items: { $ref: '#/components/schemas/UserSummary' } }
+              wins: { type: integer }
+              rounds: { type: integer }
+        players:
+          type: array
+          description: Ordenado por vitórias e depois pontos.
+          items:
+            type: object
+            required: [user, wins, rounds, points]
+            properties:
+              user: { $ref: '#/components/schemas/UserSummary' }
+              wins: { type: integer }
+              rounds: { type: integer }
+              points: { type: integer }
+        mvp:
+          type: array
+          description: Destaque do dia — mais vitórias, desempate por pontos (empates aparecem juntos; RN-108).
+          items: { $ref: '#/components/schemas/UserSummary' }
+
+    # ── Você e avisos (2.0)
+    MyStats:
+      type: object
+      required: [matches, attendanceRate, highlights]
+      properties:
+        matches: { type: integer, description: Jogos em que esteve (finalizados). }
+        attendanceRate: { type: number, minimum: 0, maximum: 1, description: Foi / jogos em que estava na lista. }
+        highlights: { type: integer, description: Vezes que foi o destaque do dia. }
+    MyStatsDetails:
+      type: object
+      description: Só jogos finalizados em que a pessoa esteve (RN-94).
+      required: [matches, rounds, wins, points, highlights, attendanceRate, streak, bestStreak, bestDay, groups, partners, recentForm]
+      properties:
+        matches: { type: integer }
+        rounds: { type: integer, description: Rodadas jogadas. }
+        wins: { type: integer, description: Rodadas vencidas. }
+        points: { type: integer, description: Pontos marcados (quem fez o ponto). }
+        highlights: { type: integer, description: Vezes destaque do dia. }
+        attendanceRate: { type: number, minimum: 0, maximum: 1 }
+        streak: { type: integer, description: Jogos seguidos em que foi, contando do mais recente. }
+        bestStreak: { type: integer, description: Maior sequência de jogos seguidos em que foi. }
+        bestDay:
+          description: Dia com mais vitórias (desempate por pontos).
+          oneOf:
+            - type: object
+              required: [matchId, startsAt, groupName, wins, rounds, points]
+              properties:
+                matchId: { type: string }
+                startsAt: { type: string, format: date-time }
+                groupName: { type: string }
+                wins: { type: integer }
+                rounds: { type: integer }
+                points: { type: integer }
+            - type: 'null'
+        groups:
+          type: array
+          description: Por turma, ordenado pelo aproveitamento (vitórias ÷ rodadas).
+          items:
+            type: object
+            required: [groupId, name, matches, rounds, wins]
+            properties:
+              groupId: { type: string }
+              name: { type: string }
+              matches: { type: integer }
+              rounds: { type: integer }
+              wins: { type: integer }
+        partners:
+          type: array
+          maxItems: 5
+          description: Com quem mais vence junto (no mínimo 2 rodadas no mesmo time), ordenado por vitórias juntos.
+          items:
+            type: object
+            required: [user, rounds, wins]
+            properties:
+              user: { $ref: '#/components/schemas/UserSummary' }
+              rounds: { type: integer }
+              wins: { type: integer }
+        recentForm:
+          type: array
+          maxItems: 10
+          description: Últimas rodadas, da mais antiga para a mais recente.
+          items: { type: string, enum: [win, loss] }
+    MyHistory:
+      type: object
+      required: [outcome]
+      properties:
+        outcome: { type: string, enum: [attended, absent, late_withdrawal] }
+        wins: { type: [integer, 'null'] }
+        rounds: { type: [integer, 'null'] }
+        notice: { type: string, enum: [in_advance, none], description: 'Quem não foi: avisou antes ou não.' }
+        hoursBefore: { type: [number, 'null'], description: 'Desistência tardia: quantas horas antes.' }
+    Notification:
+      type: object
+      required: [id, kind, category, title, detail, createdAt, readAt, count]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [list_opened, response_reminder, payment_due, payment_approved, payment_rejected, payments_to_review, fee_charge, waitlist_promoted, match_changed, match_cancelled, day_summary_ready]
+        category: { $ref: '#/components/schemas/NotificationCategory' }
+        title: { type: string, examples: ['Lista aberta: Vôlei de sábado'] }
+        detail: { type: string, examples: ['Sáb, 28 nov, 9h · responda até sex'] }
+        createdAt: { type: string, format: date-time }
+        readAt: { type: [string, 'null'], format: date-time }
+        count: { type: integer, minimum: 1, description: Avisos repetidos agrupados. }
+        groupId: { type: [string, 'null'] }
+        matchId: { type: [string, 'null'] }
+        paymentId: { type: [string, 'null'] }
+    NotificationCategory:
+      type: string
+      enum: [lists, payments, waitlist, organizer, day_summary]
+    NotificationPage:
+      type: object
+      required: [items, nextCursor, unread]
+      properties:
+        items: { type: array, items: { $ref: '#/components/schemas/Notification' } }
+        nextCursor: { type: [string, 'null'] }
+        unread: { type: integer }
+    NotificationSettings:
+      type: object
+      description: 'Os 5 interruptores. Nada é enviado entre 22h e 8h; repetidos chegam agrupados (RN-112).'
+      required: [lists, payments, waitlist, organizer, day_summary]
+      properties:
+        lists: { type: boolean, description: Lista aberta e lembretes. }
+        payments: { type: boolean, description: 'Prazo acabando, aprovado ou recusado.' }
+        waitlist: { type: boolean, description: Fila e mudanças no jogo. }
+        organizer: { type: boolean, description: Para o organizador (novo pagamento para conferir). }
+        day_summary: { type: boolean, description: Resumo do dia pronto. }
+    NotificationSettingsPatch:
+      type: object
+      minProperties: 1
+      properties:
+        lists: { type: boolean }
+        payments: { type: boolean }
+        waitlist: { type: boolean }
+        organizer: { type: boolean }
+        day_summary: { type: boolean }
+    ReminderReceipt:
+      type: object
+      required: [reminderId, sent]
+      properties:
+        reminderId: { type: string, description: 'Para desfazer (DELETE /reminders/{reminderId}).' }
+        sent: { type: integer }

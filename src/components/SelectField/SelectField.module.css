@@ -1,0 +1,17 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  padding-right: 4.4rem;
+  cursor: pointer;
+}
+
+.chevron {
+  position: absolute;
+  right: var(--space-4);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}

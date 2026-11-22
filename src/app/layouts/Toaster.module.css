@@ -1,0 +1,21 @@
+/* Acima da navegação inferior no celular; canto inferior direito no desktop */
+.region {
+  position: fixed;
+  inset: auto 0 calc(var(--nav-bottom-height) + var(--space-4) + env(safe-area-inset-bottom));
+  z-index: var(--z-toast);
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--space-4);
+  pointer-events: none;
+}
+
+.region > * {
+  pointer-events: auto;
+}
+
+@media (width >= 64em) {
+  .region {
+    inset: auto var(--space-8) var(--space-8) auto;
+    justify-content: flex-end;
+  }
+}

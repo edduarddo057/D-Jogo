@@ -1,0 +1,158 @@
+.list {
+  margin: 0;
+  padding: var(--space-1) var(--space-5);
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+
+.item + .item {
+  border-top: 1px solid var(--color-border);
+}
+
+.target {
+  display: grid;
+  grid-template-areas:
+    'lead body chev'
+    'lead trail chev';
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-4);
+  width: 100%;
+  min-height: 7.2rem;
+  padding: var(--space-3) 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+/* Sem selo/valor: uma linha só, com o texto centralizado na altura (sem a 2ª linha vazia) */
+.target:not(:has(.trailing)) {
+  grid-template-areas: 'lead body chev';
+}
+
+a.target,
+button.target {
+  cursor: pointer;
+}
+
+a.target:focus-visible,
+button.target:focus-visible {
+  outline-offset: -0.2rem;
+  border-radius: var(--radius-md);
+}
+
+.leading {
+  display: flex;
+  grid-area: lead;
+}
+
+.trailing {
+  display: flex;
+  flex-wrap: wrap;
+  grid-area: trail;
+  gap: var(--space-2);
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+.body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+/* Quebra em várias linhas em vez de cortar com "…": o texto inteiro precisa ser lido */
+.title,
+.meta {
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font: var(--text-body-strong-weight) var(--text-body-strong-size) / var(--text-body-strong-line) var(--font-sans);
+}
+
+.meta {
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  grid-area: chev;
+  gap: var(--space-1);
+}
+
+.chevron {
+  grid-area: chev;
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.dateTile {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 5.2rem;
+  padding: 0.6rem 0 0.7rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+  text-align: center;
+}
+
+.dateTile small {
+  color: var(--color-accent-text);
+  font: 700 1.2rem / 1.4rem var(--font-sans);
+  text-transform: uppercase;
+}
+
+.dateTile b {
+  font: 800 2.4rem / 2.8rem var(--font-display);
+}
+
+.flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.inline .target {
+  grid-template-areas: 'lead body trail chev';
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.inline .trailing {
+  justify-self: end;
+  margin-top: 0;
+}
+
+.danger .title {
+  color: var(--color-danger-text);
+}
+
+.accent .title {
+  color: var(--color-accent-text);
+}
+
+.below {
+  padding: 0 0 var(--space-3);
+}
+
+@media (width >= 48em) {
+  .target {
+    grid-template-areas: 'lead body trail chev';
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+  }
+
+  .trailing {
+    justify-self: end;
+    margin-top: 0;
+  }
+}

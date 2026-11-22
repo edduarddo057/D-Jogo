@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Tipos, lint, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Tokens em dia com o design system
+        run: |
+          pnpm tokens
+          git diff --exit-code -- src/styles/tokens.css || (echo "::error::tokens.css desatualizado. Rode 'pnpm tokens' e faça commit." && exit 1)
+
+      - name: Tipos da API em dia com o contrato
+        run: |
+          pnpm api:types
+          git diff --exit-code -- src/lib/http/schema.d.ts || (echo "::error::schema.d.ts desatualizado. Rode 'pnpm api:types' e faça commit." && exit 1)
+
+      - name: Tipos (TypeScript)
+        run: pnpm typecheck
+
+      - name: Lint (ESLint)
+        run: pnpm lint
+
+      - name: Lint de CSS (Stylelint)
+        run: pnpm lint:css
+
+      - name: Formatação (Prettier)
+        run: pnpm format:check
+
+      - name: Testes
+        run: pnpm coverage
+
+      - name: Build
+        run: pnpm build
+
+      - name: Orçamento de performance (JS inicial < 170 KB gzip)
+        run: pnpm budget
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

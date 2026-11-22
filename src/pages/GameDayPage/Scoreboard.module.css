@@ -1,0 +1,360 @@
+/* Tela cheia: cobre o app inteiro, só o jogo */
+.board {
+  position: fixed;
+  z-index: var(--z-overlay);
+  display: grid;
+  grid-template-areas:
+    'offline'
+    'top'
+    'sides'
+    'dock';
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  inset: 0;
+  padding: calc(var(--space-3) + env(safe-area-inset-top)) max(var(--space-4), env(safe-area-inset-right))
+    calc(var(--space-4) + env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left));
+  background: var(--color-bg);
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+.offline {
+  display: flex;
+  grid-area: offline;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-inverse);
+  color: var(--color-on-inverse);
+  font: 600 1.3rem / 1.8rem var(--font-sans);
+}
+
+.top {
+  display: flex;
+  grid-area: top;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.titles {
+  flex: 1;
+  min-width: 0;
+}
+
+.round {
+  margin: 0;
+  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+}
+
+.muted {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+}
+
+.lock {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.unlocked {
+  color: var(--color-warning-text);
+}
+
+.sides {
+  display: grid;
+  grid-area: sides;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  min-height: 0;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-4) var(--space-3);
+  border-radius: var(--radius-xl);
+  color: var(--color-on-team);
+}
+
+.sideName {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font: 700 1.7rem / 2.2rem var(--font-sans);
+}
+
+.sideNum {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 0;
+  font: 800 clamp(8rem, 26vw, 16rem) / 1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+/* +1 grande, no alcance do polegar */
+.plus {
+  flex: none;
+  min-height: 11.2rem;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 800 3.2rem / 1 var(--font-display);
+  cursor: pointer;
+}
+
+.minus {
+  flex: none;
+  min-height: 4.8rem;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: 700 1.6rem / 2rem var(--font-sans);
+  cursor: pointer;
+}
+
+.minus:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dock {
+  grid-area: dock;
+}
+
+/*
+ * Celular deitado: pouca altura. "Encerrar rodada" sobe para a barra do topo e cada time vira duas
+ * colunas, com o placar grande e o +1/−1 na borda de fora, onde ficam os polegares.
+ */
+@media (orientation: landscape) and (height <= 37.5em) {
+  .board {
+    grid-template:
+      'offline offline' auto
+      'top dock' auto
+      'sides sides' minmax(0, 1fr)
+      / minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-3);
+    padding-top: calc(var(--space-2) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+  }
+
+  .dock {
+    align-self: center;
+  }
+
+  .round {
+    font-size: 2rem;
+    line-height: 2.6rem;
+  }
+
+  .side {
+    display: grid;
+    grid-template:
+      'name name' auto
+      'plus num' minmax(0, 1fr)
+      'minus num' auto
+      / minmax(11rem, 40%) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+  }
+
+  /* time da direita: botões na borda direita */
+  .right {
+    grid-template:
+      'name name' auto
+      'num plus' minmax(0, 1fr)
+      'num minus' auto
+      / minmax(0, 1fr) minmax(11rem, 40%);
+  }
+
+  .sideName {
+    grid-area: name;
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .sideNum {
+    grid-area: num;
+    font-size: clamp(5.6rem, 40vh, 16rem);
+  }
+
+  .plus {
+    grid-area: plus;
+    min-height: 0;
+  }
+
+  .minus {
+    grid-area: minus;
+    min-height: 4.4rem;
+  }
+
+  .drawerHead {
+    padding-top: calc(var(--space-3) + env(safe-area-inset-top));
+    padding-bottom: var(--space-3);
+  }
+
+  .pick {
+    min-height: 4.8rem;
+  }
+}
+
+/* Lista lateral de quem fez o ponto */
+.drawer {
+  width: min(34rem, 84vw);
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0 0 calc(var(--space-4) + env(safe-area-inset-bottom));
+  border: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow-modal);
+  overscroll-behavior: contain;
+}
+
+.drawer[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.drawer::backdrop {
+  background: var(--color-overlay);
+}
+
+.fromLeft {
+  inset: 0 auto 0 0;
+  border-radius: 0 var(--radius-xl) var(--radius-xl) 0;
+  animation: slide-in-left var(--duration-base) var(--ease-standard);
+}
+
+.fromRight {
+  inset: 0 0 0 auto;
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  animation: slide-in-right var(--duration-base) var(--ease-standard);
+}
+
+.drawerHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-4) + env(safe-area-inset-top)) var(--space-4) var(--space-4);
+  color: var(--color-on-team);
+}
+
+.drawerHead > span:nth-child(2) {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nobody {
+  flex: none;
+  min-height: 3.6rem;
+  padding: 0 var(--space-3);
+  border: 1px solid currentColor;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: inherit;
+  font: 600 1.4rem / 1.8rem var(--font-sans);
+  cursor: pointer;
+}
+
+.drawerTitle {
+  font: 700 1.8rem / 2.4rem var(--font-sans);
+}
+
+.drawerSub {
+  font-size: 1.4rem;
+  line-height: 2rem;
+  opacity: 0.9;
+}
+
+.picks {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  margin: 0;
+  padding: 0 var(--space-3);
+  list-style: none;
+}
+
+/* nomes embaixo, perto do polegar que acabou de tocar no +1 */
+.picks > li:first-child {
+  margin-top: auto;
+}
+
+.pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 5.6rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 600 1.7rem / 2.2rem var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pickPos {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.pickPts {
+  display: grid;
+  flex: none;
+  place-items: center;
+  min-width: 2.8rem;
+  height: 2.8rem;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+  font: 700 1.4rem / 1 var(--font-sans);
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fromLeft,
+  .fromRight {
+    animation: none;
+  }
+}

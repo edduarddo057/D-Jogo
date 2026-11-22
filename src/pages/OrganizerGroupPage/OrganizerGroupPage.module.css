@@ -1,0 +1,145 @@
+.muted {
+  color: var(--color-text-muted);
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+.value {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.reviewTop > span {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 1.4rem;
+  overflow-wrap: anywhere;
+}
+
+.gameCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.gameTop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.gameText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gameTitle {
+  font: var(--text-body-strong-weight) 1.7rem / 2.2rem var(--font-sans);
+}
+
+.meter {
+  margin-top: var(--space-1);
+}
+
+.pair > * {
+  padding-inline: var(--space-3);
+  white-space: normal;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.label {
+  font: var(--text-label-weight) 1.5rem / 2rem var(--font-sans);
+}
+
+.help {
+  color: var(--color-text-muted);
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+}
+
+.search {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 1.7rem;
+  left: var(--space-4);
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search input {
+  padding-left: 4.4rem;
+}
+
+.balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.money {
+  font: var(--text-money-weight) var(--text-money-size) / var(--text-money-line) var(--font-display);
+  letter-spacing: var(--text-money-tracking);
+  font-variant-numeric: tabular-nums;
+}
+
+.pos {
+  color: var(--color-success-text);
+  font-weight: 600;
+}
+
+.neg {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.centerBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  text-align: center;
+}

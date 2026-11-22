@@ -1,0 +1,21 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-8);
+  text-align: center;
+}
+
+.hero > :first-child {
+  margin-bottom: var(--space-3);
+}
+
+.title {
+  font: var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
+  letter-spacing: var(--text-display-tracking);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}

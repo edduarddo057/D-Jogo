@@ -1,0 +1,34 @@
+/* Largura pelo texto, com a sobra dividida por igual: rótulo curto ("Fila 2") cede espaço ao longo */
+.track {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
+}
+
+.segment {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+  place-items: center;
+  min-height: 4.4rem;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: var(--text-label-weight) 1.4rem / 1.8rem var(--font-sans);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+
+.active {
+  background: var(--color-surface);
+  color: var(--color-accent-text);
+  box-shadow: var(--shadow-card);
+}

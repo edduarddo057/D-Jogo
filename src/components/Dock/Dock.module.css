@@ -1,0 +1,29 @@
+.dock {
+  position: sticky;
+  z-index: var(--z-sticky);
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: auto calc(var(--space-5) * -1) calc(var(--space-8) * -1 - env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.note {
+  color: var(--color-text-muted);
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+  text-align: center;
+}
+
+@media (width >= 48em) {
+  .dock {
+    margin-inline: 0;
+    margin-bottom: 0;
+    padding-inline: 0;
+    border-top: 0;
+    background: transparent;
+  }
+}

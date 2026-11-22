@@ -1,0 +1,88 @@
+/* Medalha de pódio: fita em V em cima e moeda metálica com o ícone gravado */
+.coin {
+  --metal: var(--color-on-brand-accent);
+
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 5.6rem;
+  padding-top: 1.2rem;
+}
+
+.ribbon {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2.4rem;
+  height: 1.8rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--metal) 55%, var(--color-brand-deep)) 50%,
+    color-mix(in oklab, var(--metal) 75%, var(--color-brand-deep)) 50%
+  );
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 50% 100%, 0 70%);
+  transform: translateX(-50%);
+}
+
+.face {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 0.2rem solid color-mix(in oklab, var(--metal) 60%, var(--color-brand-deep));
+  border-radius: var(--radius-full);
+  background: radial-gradient(
+    circle at 32% 28%,
+    color-mix(in oklab, var(--metal) 35%, var(--color-on-brand)) 0%,
+    var(--metal) 45%,
+    color-mix(in oklab, var(--metal) 65%, var(--color-brand-deep)) 100%
+  );
+  color: var(--color-brand-deep);
+  box-shadow: var(--shadow-card);
+}
+
+/* brilho do metal */
+.face::after {
+  position: absolute;
+  inset: 0.4rem;
+  border: 0.1rem solid color-mix(in oklab, var(--color-on-brand) 45%, transparent);
+  border-radius: var(--radius-full);
+  content: '';
+}
+
+.green {
+  --metal: var(--color-on-brand-accent);
+}
+
+.bronze {
+  --metal: var(--color-team-8);
+}
+
+.gold {
+  --metal: var(--color-brand-ball);
+}
+
+.locked {
+  --metal: var(--color-on-brand-muted);
+
+  opacity: 0.5;
+}
+
+.lg {
+  width: 6.4rem;
+  height: 8rem;
+  padding-top: 1.6rem;
+}
+
+.lg .ribbon {
+  width: 3.4rem;
+  height: 2.6rem;
+}
+
+.lg .face {
+  width: 6.4rem;
+  height: 6.4rem;
+  border-width: 0.3rem;
+}

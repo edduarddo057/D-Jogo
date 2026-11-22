@@ -1,0 +1,282 @@
+.muted {
+  color: var(--color-text-muted);
+  font-size: 1.4rem;
+  line-height: 2rem;
+}
+
+/* Nível: card da marca com a medalha grande */
+.level {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-xl);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+:global([data-theme='dark']) .level {
+  border-color: var(--color-border);
+}
+
+.levelText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.eyebrow {
+  color: var(--color-on-brand-accent);
+  font: var(--text-overline-weight) var(--text-overline-size) / var(--text-overline-line) var(--font-sans);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+}
+
+.levelName {
+  font: 800 2.4rem / 2.8rem var(--font-display);
+}
+
+.xpTrack {
+  overflow: hidden;
+  height: 0.8rem;
+  margin-top: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--color-on-brand-surface);
+}
+
+.xpBar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-brand-ball);
+}
+
+.xpText {
+  color: var(--color-on-brand-muted);
+  font-size: 1.3rem;
+  line-height: 1.8rem;
+}
+
+.xpText b {
+  color: var(--color-on-brand);
+}
+
+/* Números em placas */
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.number {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.2rem;
+  padding: var(--space-3) var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.numberValue {
+  margin: 0;
+  font: 800 2.2rem / 2.6rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.numberLabel {
+  color: var(--color-text-muted);
+  font: 600 1.1rem / 1.4rem var(--font-sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* Sequência */
+.streak {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+/* Forma recente: bolinhas */
+.form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ball {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--radius-full);
+}
+
+.win {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.loss {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+}
+
+/* Onde vai melhor */
+.groups,
+.partners {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group,
+.partner,
+.bestDay {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.group {
+  flex-direction: column;
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.groupName {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font: 600 1.6rem / 2.2rem var(--font-sans);
+}
+
+.crown {
+  color: var(--color-team-8);
+}
+
+.groupPct {
+  font: 800 2rem / 2.4rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.meter {
+  overflow: hidden;
+  height: 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+}
+
+.meterBar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+
+/* Parceiros e melhor dia */
+.partner,
+.bestDay {
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.rank {
+  flex: none;
+  width: 2.4rem;
+  color: var(--color-text-muted);
+  font: 800 1.5rem / 2rem var(--font-display);
+  text-align: center;
+}
+
+.partnerText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.bestDay {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bestIcon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+}
+
+.chev {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+/* Conquistas: álbum de medalhas */
+.achievements {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.6rem, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* as medalhas são escuras por dentro: a placa da conquista tem o fundo da marca */
+.achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+  text-align: center;
+}
+
+.locked {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+}
+
+.achTitle {
+  font: 700 1.3rem / 1.8rem var(--font-sans);
+}
+
+.achHow {
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+  opacity: 0.85;
+}

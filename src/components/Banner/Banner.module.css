@@ -1,0 +1,35 @@
+.banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.icon {
+  display: flex;
+  flex: none;
+  margin-top: 0.1rem;
+}
+
+.success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}
+
+.info {
+  background: var(--color-info-bg);
+  color: var(--color-info-text);
+}

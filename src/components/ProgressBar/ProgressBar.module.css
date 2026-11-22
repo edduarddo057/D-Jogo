@@ -1,0 +1,37 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.label {
+  font: 700 var(--text-body-lg-size) / var(--text-body-lg-line) var(--font-sans);
+}
+
+.detail {
+  font-weight: 500;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.track {
+  overflow: hidden;
+  height: 1rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-sunken);
+}
+
+.bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+  transition: width 400ms var(--ease-standard);
+}

@@ -1,0 +1,126 @@
+.board {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow: hidden;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: 1px solid var(--color-brand);
+  border-radius: var(--radius-xl);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+  isolation: isolate;
+}
+
+:global([data-theme='dark']) .board {
+  border-color: var(--color-border);
+}
+
+/* anel da marca, discreto no canto */
+.board::before {
+  position: absolute;
+  top: -5rem;
+  right: -5rem;
+  width: 14rem;
+  height: 14rem;
+  border: 2.6rem solid var(--color-on-brand-accent);
+  border-radius: var(--radius-full);
+  opacity: 0.1;
+  content: '';
+}
+
+.head,
+.medals {
+  position: relative; /* por cima do anel */
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.eyebrow {
+  color: var(--color-on-brand-accent);
+  font: var(--text-overline-weight) var(--text-overline-size) / var(--text-overline-line) var(--font-sans);
+  letter-spacing: var(--text-overline-tracking);
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  font: 800 1.8rem / 2.4rem var(--font-display);
+}
+
+.cheer {
+  color: var(--color-on-brand-muted);
+  white-space: nowrap;
+  font: 500 1.5rem / 2.4rem var(--font-sans);
+}
+
+.medals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.medal {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+  animation: pop var(--duration-slow) var(--ease-standard) both;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.more::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: '';
+}
+
+.more:focus-visible {
+  outline: none;
+}
+
+.board:has(.more:focus-visible) {
+  outline: 0.3rem solid var(--color-focus);
+  outline-offset: 0.2rem;
+}
+
+.value {
+  color: var(--color-on-brand);
+  font: 800 2rem / 2.4rem var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  color: var(--color-on-brand-muted);
+  font: 600 1.1rem / 1.4rem var(--font-sans);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem) scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .medal {
+    animation: none;
+  }
+}

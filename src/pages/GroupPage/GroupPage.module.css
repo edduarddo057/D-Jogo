@@ -1,0 +1,31 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.hero > :first-child {
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  font: var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
+  letter-spacing: var(--text-display-tracking);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.4rem;
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+
+.membersGroup {
+  margin-top: var(--space-5);
+}

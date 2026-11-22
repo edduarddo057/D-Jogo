@@ -1,0 +1,112 @@
+.nav {
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  align-items: center;
+  min-height: 4.8rem;
+  margin: calc(var(--space-2) * -1) calc(var(--space-3) * -1) 0;
+}
+
+.side {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.end {
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.title {
+  overflow: hidden;
+  max-width: 22rem;
+  font: var(--text-body-strong-weight) 1.7rem / 2.2rem var(--font-sans);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 4.4rem;
+  padding: 0 var(--space-2) 0 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-accent-text);
+  font: 500 1.7rem / 2.2rem var(--font-sans);
+  cursor: pointer;
+}
+
+.large {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.titleText {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.h1 {
+  font: var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
+  letter-spacing: var(--text-display-tracking);
+  overflow-wrap: anywhere;
+}
+
+.h1:focus {
+  outline: none;
+}
+
+.medium {
+  font: var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
+  letter-spacing: var(--text-title-lg-tracking);
+}
+
+.muted {
+  color: var(--color-text-muted);
+  font-size: var(--text-body-sm-size);
+  line-height: var(--text-body-sm-line);
+}
+
+.titleActions {
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+}
+
+.iconButton {
+  position: relative;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-accent-text);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--color-accent-soft);
+}
+
+.dot {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--color-danger-text);
+  box-shadow: var(--ring-dot-bg);
+}

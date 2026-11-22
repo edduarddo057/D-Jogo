@@ -1,0 +1,163 @@
+.sheet {
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  margin: auto 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: var(--shadow-modal);
+  overscroll-behavior: contain;
+}
+
+.sheet::backdrop {
+  background: var(--color-overlay);
+}
+
+.sheet[open] {
+  animation: sheet-in var(--duration-slow) var(--ease-standard);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  max-height: 92dvh;
+}
+
+.grip {
+  align-self: center;
+  flex: none;
+  width: 3.6rem;
+  height: 0.5rem;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-border-strong);
+}
+
+.header {
+  display: grid;
+  flex: none;
+
+  /* os botões dos lados nunca ficam por baixo do título: o título é que encolhe */
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  column-gap: var(--space-2);
+  align-items: center;
+  min-height: 5.2rem;
+  padding: var(--space-1) var(--space-2);
+}
+
+.side {
+  display: flex;
+  min-width: 0;
+}
+
+.end {
+  justify-content: flex-end;
+}
+
+.title {
+  overflow: hidden;
+  max-width: 22rem;
+  font: var(--text-body-strong-weight) 1.7rem / 2.2rem var(--font-sans);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.headerButton {
+  display: inline-flex;
+  align-items: center;
+  min-height: 4.4rem;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-accent-text);
+  font: 500 1.7rem / 2.2rem var(--font-sans);
+  cursor: pointer;
+}
+
+.headerButton:disabled {
+  color: var(--color-text-disabled);
+  cursor: not-allowed;
+}
+
+.strong {
+  font-weight: 700;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-2) var(--space-4) calc(var(--space-8) + env(safe-area-inset-bottom));
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.6rem) scale(0.98);
+  }
+}
+
+@media (width >= 48em) {
+  .sheet {
+    width: min(52rem, calc(100vw - var(--space-8)));
+    margin: auto;
+    border-radius: var(--radius-xl);
+  }
+
+  .sheet[open] {
+    animation-name: dialog-in;
+  }
+
+  .grip {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet[open] {
+    animation: none;
+  }
+}
+
+/* ConfirmSheet */
+.confirm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.confirmSubject {
+  margin: 0;
+  font: var(--text-body-strong-weight) 1.7rem / 2.2rem var(--font-sans);
+}
+
+.consequences {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.6rem;
+  line-height: 2.2rem;
+  text-wrap: balance;
+}

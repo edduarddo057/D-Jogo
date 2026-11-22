@@ -1,0 +1,63 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-declaration-strict-value"],
+  "ignoreFiles": ["src/styles/tokens.css", "dist/**", "coverage/**"],
+  "rules": {
+    "selector-class-pattern": [
+      "^[a-z][a-zA-Z0-9]*$",
+      {
+        "message": "Classes de CSS Module em camelCase (ex.: .headerTitle)"
+      }
+    ],
+    "custom-property-pattern": null,
+    "value-keyword-case": [
+      "lower",
+      {
+        "camelCaseSvgKeywords": true
+      }
+    ],
+    "selector-pseudo-class-no-unknown": [
+      true,
+      {
+        "ignorePseudoClasses": ["global"]
+      }
+    ],
+    "scale-unlimited/declaration-strict-value": [
+      ["/color$/", "fill", "stroke", "background", "z-index", "font-family", "box-shadow"],
+      {
+        "ignoreValues": ["transparent", "inherit", "initial", "unset", "none", "0", "auto", "currentColor"],
+        "disableFix": true,
+        "message": "Use uma variável do design system (var(--...)) em \"${property}\""
+      }
+    ],
+    "unit-disallowed-list": [
+      ["px"],
+      {
+        "ignoreProperties": {
+          "px": ["/^border/", "outline-width", "outline-offset", "/^box-shadow/"]
+        },
+        "ignoreMediaFeatureNames": {
+          "px": ["min-width", "max-width"]
+        },
+        "message": "Use rem (1rem = 10px) ou um token; px só em bordas finas."
+      }
+    ],
+    "import-notation": "string",
+    "property-no-vendor-prefix": [
+      true,
+      {
+        "ignoreProperties": ["/text-size-adjust/", "/tap-highlight-color/", "/font-smoothing/"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/global.css"],
+      "rules": {
+        "scale-unlimited/declaration-strict-value": null,
+        "unit-disallowed-list": null,
+        "selector-class-pattern": null
+      }
+    }
+  ]
+}

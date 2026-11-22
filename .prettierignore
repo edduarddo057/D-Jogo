@@ -1,0 +1,10 @@
+dist
+dev-dist
+coverage
+node_modules
+pnpm-lock.yaml
+src/styles/tokens.css
+src/lib/http/schema.d.ts
+public/mockServiceWorker.js
+docs/api/openapi.yaml
+*.md
