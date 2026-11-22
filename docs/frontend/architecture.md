@@ -340,7 +340,7 @@ Regras:
 
 1. Um script inline no `index.html` lê a preferência salva antes do React carregar e aplica `data-theme` no `<html>`. Assim a tela não pisca no tema errado.
 2. `useThemeStore` mantém a preferência (`system` \| `light` \| `dark`) e escuta `prefers-color-scheme` quando é `system`.
-3. O `<meta name="theme-color">` muda junto (`#f4f6f8` claro / `#0b1622` escuro).
+3. O `<meta name="theme-color">` muda junto (`#f5f5f7` claro / `#0e0e10` escuro).
 4. Componentes nunca checam o tema; usam só tokens semânticos, que já mudam de valor.
 
 ## 12. PWA
@@ -348,12 +348,12 @@ Regras:
 | Item | Decisão |
 | --- | --- |
 | Plugin | `vite-plugin-pwa`, estratégia `generateSW`, `registerType: 'prompt'`. |
-| Manifest | `name: "Dá Jogo"`, `short_name: "Dá Jogo"`, `display: standalone`, `start_url: "/"`, `scope: "/"`, `lang: pt-BR`, `background_color: #142a40`, `theme_color: #142a40`, ícones 192, 512 e `maskable` gerados do símbolo "O salto" (`public/brand/`). |
+| Manifest | `name: "Dá Jogo"`, `short_name: "Dá Jogo"`, `display: standalone`, `start_url: "/"`, `scope: "/"`, `lang: pt-BR`, `background_color: #121214`, `theme_color: #121214`, ícones 192, 512 e `maskable` gerados do símbolo (`pnpm icons`, a partir de `public/brand/source/`). |
 | Cache | Precache do app shell (HTML, JS, CSS, ícones) e das fontes, que são servidas pelo próprio app (Fontsource, só subconjuntos latinos no precache). **Respostas da API não ficam no service worker**: o TanStack Query cuida dos dados, para nunca mostrar vaga ou pagamento desatualizado como se fosse atual. |
 | Atualização | Quando há versão nova, aparece um toast "Nova versão disponível — Atualizar" (`src/app/pwa.ts`). A atualização nunca acontece sozinha. Com os mocks ligados, o service worker do PWA não é registrado. |
 | Instalação (Android/desktop) | Guardar o `beforeinstallprompt` (`usePwaStore`) e oferecer "Instalar app" em Perfil › Preferências (`InstallAppCard`) e depois da primeira presença confirmada, nunca na primeira visita. |
 | Instalação (iPhone) | Sem aviso nativo: um card com 3 passos ("Compartilhar → Adicionar à Tela de Início") aparece no Safari quando o app não está instalado. |
-| Tela de abertura | Fundo `#142a40` com o símbolo; no iOS, `apple-touch-icon` e as metatags de status bar. |
+| Tela de abertura | Animação em `public/splash.css` (fundo `#121214`): as peças do símbolo se juntam e viram o logo em ~1,8 s; `src/app/splash.ts` só tira a abertura quando a animação acaba e o app montou. Com "reduzir movimento", o logo aparece parado. No iOS, `apple-touch-icon` e as metatags de status bar. |
 | Offline | Abre o app shell e mostra os últimos dados em memória com o aviso "Sem conexão". |
 
 ## 13. Acessibilidade

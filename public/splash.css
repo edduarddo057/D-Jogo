@@ -1,14 +1,211 @@
-/* Abertura estática: aparece antes do JavaScript (pinta no primeiro quadro) e some quando o React monta.
-   Arquivo externo, e não <style> inline, por causa da Content-Security-Policy. */
-#splash {
+/* Abertura animada: aparece antes do JavaScript (pinta no primeiro quadro). As peças do símbolo se juntam
+   (bola, curva, barra do D e o atleta) e viram o logo; src/app/splash.ts tira a abertura quando a animação
+   termina e o app está pronto. Arquivo externo, e não <style> inline, por causa da Content-Security-Policy. */
+.splash {
   position: fixed;
+  z-index: 2147483000;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background: #142a40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  background: radial-gradient(circle at 50% 42%, #1f1f23 0%, #121214 60%);
+  transition: opacity 280ms ease;
 }
 
-#splash img {
-  width: min(300px, 80vw);
+.splash-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.splash-mark {
+  display: grid;
+  width: min(220px, 56vw);
+}
+
+.splash-mark > * {
+  grid-area: 1 / 1;
+  width: 100%;
   height: auto;
+}
+
+/* peças desenhadas: aproximação do símbolo, que dá lugar ao logo de verdade no fim */
+.s-swoosh,
+.s-bowl {
+  fill: none;
+  stroke: #ff7a1a;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+.s-swoosh {
+  stroke-width: 52;
+  animation: splash-draw 600ms cubic-bezier(0.6, 0, 0.3, 1) 250ms forwards;
+}
+
+.s-bowl {
+  stroke-width: 104;
+  animation: splash-draw 650ms cubic-bezier(0.6, 0, 0.3, 1) 450ms forwards;
+}
+
+.s-bar {
+  fill: #ffffff;
+  opacity: 0;
+  animation: splash-slide 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 750ms forwards;
+}
+
+.s-runner {
+  fill: #ffffff;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 40% 60%;
+  animation: splash-jump 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 950ms forwards;
+}
+
+.s-ball {
+  fill: #ff8a1a;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  transform: translateY(-900px);
+  animation: splash-ball 620ms linear forwards;
+}
+
+.splash-pieces {
+  animation: splash-fade-out 300ms ease 1300ms forwards;
+}
+
+.splash-logo {
+  opacity: 0;
+  transform: scale(0.94);
+  animation: splash-logo 380ms cubic-bezier(0.2, 0.8, 0.2, 1) 1200ms forwards;
+}
+
+.splash-word {
+  margin: 0;
+  color: #ffffff;
+  font:
+    italic 800 34px / 1 'Plus Jakarta Sans',
+    system-ui,
+    sans-serif;
+  letter-spacing: -0.02em;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: splash-word 420ms cubic-bezier(0.2, 0.8, 0.2, 1) 1380ms forwards;
+}
+
+.splash-word span {
+  color: #ff7a1a;
+}
+
+@keyframes splash-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes splash-slide {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-jump {
+  from {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* a bola cai, quica duas vezes e para no lugar */
+@keyframes splash-ball {
+  0% {
+    transform: translateY(-900px);
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+  }
+
+  55% {
+    transform: translateY(0) scale(1.12, 0.86);
+    animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
+  }
+
+  72% {
+    transform: translateY(-90px);
+    animation-timing-function: cubic-bezier(0.5, 0, 1, 1);
+  }
+
+  86% {
+    transform: translateY(0) scale(1.05, 0.94);
+    animation-timing-function: cubic-bezier(0, 0, 0.5, 1);
+  }
+
+  93% {
+    transform: translateY(-22px);
+  }
+
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes splash-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes splash-logo {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes splash-word {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Versão parada (a cópia do React enquanto a sessão é verificada) e para quem pediu menos movimento */
+.splash-static .splash-pieces,
+.splash-static .splash-logo,
+.splash-static .splash-word {
+  animation: none;
+}
+
+.splash-static .splash-pieces {
+  display: none;
+}
+
+.splash-static .splash-logo,
+.splash-static .splash-word {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-pieces {
+    display: none;
+  }
+
+  .splash-logo,
+  .splash-word {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
 }

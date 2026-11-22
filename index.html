@@ -4,14 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Dá Jogo — junta a galera, organiza a turma e fecha o time." />
-    <meta name="theme-color" content="#f4f6f8" />
+    <meta name="theme-color" content="#f5f5f7" />
     <title>Dá Jogo</title>
 
     <!-- Aplica o tema antes da primeira pintura (script síncrono e pequeno, ver public/theme-init.js) -->
     <script src="/theme-init.js"></script>
     <link rel="stylesheet" href="/splash.css" />
 
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
@@ -22,11 +21,30 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   </head>
   <body>
-    <div id="root">
-      <div id="splash" role="status" aria-label="Abrindo o Dá Jogo">
-        <img src="/brand/logo-on-dark.svg" alt="" width="300" height="91" fetchpriority="high" />
+    <!-- Abertura animada (public/splash.css): fica fora do #root para o React não reiniciar a animação.
+         As peças do símbolo se juntam e viram o logo; src/app/splash.ts tira a abertura no fim. -->
+    <div id="splash" class="splash" role="status" aria-label="Abrindo o Dá Jogo">
+      <div class="splash-mark">
+        <svg class="splash-pieces" viewBox="54 175 914 656" aria-hidden="true">
+          <path class="s-swoosh" pathLength="1" d="M80 790 C110 600 260 470 470 418" />
+          <path class="s-bowl" pathLength="1" d="M140 815 L520 815 C760 815 880 640 860 470 C852 400 840 360 828 330" />
+          <path
+            class="s-bar"
+            d="M208 458 L322 198 Q330 188 345 188 L640 192 Q740 205 800 268 L745 325 Q700 300 600 298 L405 298 L378 395 Q290 420 208 458 Z"
+          />
+          <g class="s-runner">
+            <circle cx="585" cy="362" r="45" />
+            <path
+              d="M470 425 C560 445 650 420 710 370 L810 285 C780 400 700 470 610 520 C650 545 665 580 640 610 L545 680 C565 640 575 615 560 598 C470 640 380 670 295 680 C380 620 470 560 530 515 C500 480 485 455 470 425 Z"
+            />
+          </g>
+          <circle class="s-ball" cx="906" cy="236" r="56" />
+        </svg>
+        <img class="splash-logo" src="/brand/symbol.png" alt="" width="914" height="656" fetchpriority="high" />
       </div>
+      <p class="splash-word" aria-hidden="true">Dá <span>Jogo</span></p>
     </div>
+    <div id="root"></div>
     <noscript>O Dá Jogo precisa de JavaScript para funcionar.</noscript>
     <script type="module" src="/src/app/main.tsx"></script>
   </body>

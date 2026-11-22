@@ -4,10 +4,13 @@ import { createRoot } from 'react-dom/client';
 import '@fontsource-variable/inter';
 import '@fontsource/plus-jakarta-sans/700.css';
 import '@fontsource/plus-jakarta-sans/800.css';
+import '@fontsource/plus-jakarta-sans/700-italic.css';
+import '@fontsource/plus-jakarta-sans/800-italic.css';
 import '@/styles/global.css';
 import { App } from './App';
 import { enableMocksIfNeeded } from './enableMocks';
 import { setupPwa } from './pwa';
+import { hideSplashWhenDone } from './splash';
 
 async function start() {
   const container = document.getElementById('root');
@@ -23,6 +26,7 @@ async function start() {
       <App />
     </StrictMode>,
   );
+  hideSplashWhenDone();
 }
 
 void start();

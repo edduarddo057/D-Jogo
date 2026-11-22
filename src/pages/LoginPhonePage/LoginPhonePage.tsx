@@ -1,3 +1,4 @@
+import { BrandLogo } from '@/components/BrandLogo';
 import { NavBar, PageTitle } from '@/components/NavBar';
 import { LoginPhoneForm } from '@/features/auth';
 import { useSessionStore } from '@/stores';
@@ -7,11 +8,7 @@ export function LoginPhonePage() {
   const invite = useSessionStore((s) => s.pendingInviteCode);
   return (
     <>
-      {invite ? (
-        <NavBar back={{ to: `/convite/${invite}`, label: 'Voltar' }} />
-      ) : (
-        <img src="/brand/logo.svg" alt="Dá Jogo" width="132" height="44" />
-      )}
+      {invite ? <NavBar back={{ to: `/convite/${invite}`, label: 'Voltar' }} /> : <BrandLogo />}
       <PageTitle title="Seu celular" />
       <LoginPhoneForm />
     </>

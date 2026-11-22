@@ -55,7 +55,8 @@
 }
 
 .h1 {
-  font: var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
+  /* títulos em itálico pesado, como o "Dá Jogo" da marca */
+  font: italic var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
   letter-spacing: var(--text-display-tracking);
   overflow-wrap: anywhere;
 }
@@ -65,7 +66,7 @@
 }
 
 .medium {
-  font: var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
+  font: italic var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
   letter-spacing: var(--text-title-lg-tracking);
 }
 

@@ -43,14 +43,14 @@ Os dados ficam em memória: recarregar a página volta tudo ao início. Para tro
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm tokens` | Gera `src/styles/tokens.css` de `docs/design-system/tokens.json` |
 | `pnpm api:types` | Gera `src/lib/http/schema.d.ts` de `docs/api/openapi.yaml` |
-| `pnpm icons` | Gera os ícones PNG do PWA a partir de `public/brand/app-icon*.svg` |
+| `pnpm icons` | Gera o símbolo transparente e os ícones do PWA a partir de `public/brand/source/simbolo-original.png` |
 | `pnpm budget` | Confere o orçamento de JS/CSS inicial (depois do build) |
 | `pnpm qa:audit [url]` | Acessibilidade, rolagem horizontal e teclado no Chrome, em 25 telas e folhas × 4 larguras × 2 temas (precisa do app rodando com mocks e de um Chrome em `CHROME_PATH`) |
 | `pnpm check` | Tudo o que o CI confere, de uma vez |
 
 `tokens.css` e `schema.d.ts` são gerados: não edite à mão. O CI falha se estiverem desatualizados.
 
-A marca fica em `public/brand/` (símbolo, logotipo e ícone em SVG). Os SVGs saem de `scripts/brand/build-brand-svgs.py` (Python + fonttools), e os PNGs, de `pnpm icons`.
+A marca fica em `public/brand/`: o original em `source/`, o símbolo para fundo escuro (`symbol.png`) e para fundo claro (`symbol-on-light.png`). O logotipo é o símbolo + "Dá Jogo" em texto (componente `BrandLogo`). Tudo sai de `pnpm icons` (`scripts/brand/build-symbol.mjs`). A versão anterior da marca (azul) está no git, na tag `tema-azul-original`.
 
 ## Documentação
 

@@ -96,6 +96,7 @@ Registro das decisões já tomadas. Toda mudança de decisão entra aqui com dat
 | U17 | Cores e tokens do Dá Jogo mantidos; o protótipo foi só referência de estrutura. Novo token `color-on-team` (branco) para a letra sobre as cores de time. | 22/11/2026 |
 | U18 | Turma pode ter mais de um dia fixo, cada um com o seu horário: no contrato, `schedule` (um objeto) virou `schedules` (lista, no máximo 7, vazia = a combinar). Em Criar turma, os dias são chips de múltipla escolha e um dia novo copia o horário do último. Novo jogo sugere o próximo de qualquer um dos dias, já com o horário daquele dia. | 22/11/2026 |
 | U19 | O app é usado com o celular em pé; só o placar do dia de jogo pode deitar. O manifesto passou de `portrait` para `any` (senão o app instalado no Android nunca deitaria o placar) e a orientação é controlada no código: trava em pé quando o aparelho deixa (`screen.orientation.lock`) e, onde não deixa (iPhone, navegador), uma tela "Gire o celular" cobre o app deitado fora do placar. Computador e tablet não mudam. | 22/11/2026 |
+| U20 | Nova marca em teste: símbolo "D" com atleta e bola laranja, paleta grafite + laranja (#ff7a1a), títulos em itálico pesado e abertura animada que forma o logo. Texto escuro sobre o laranja (contraste 7,3:1). Medalhas ganharam tokens próprios (`color-medal-gold`, `color-medal-green`). A versão anterior (azul) ficou na tag `tema-azul-original`; a nova está no branch `tema-laranja`. | 22/11/2026 |
 
 ## Back-end
 

@@ -98,7 +98,7 @@ O app usa `100dvh` (não `100vh`) e respeita `env(safe-area-inset-*)` quando ins
 ## Tema escuro
 
 - Segue o sistema por padrão (`prefers-color-scheme`), e a pessoa pode escolher Claro, Escuro ou Automático no Perfil. A escolha fica salva (Zustand com `persist`) e é aplicada em `<html data-theme="dark">` antes da primeira pintura, por um script inline no `index.html`, para não piscar.
-- `<meta name="theme-color">` acompanha o tema (`#f4f6f8` / `#0b1622`).
+- `<meta name="theme-color">` acompanha o tema (`#f5f5f7` / `#0e0e10`).
 - Imagens e ilustrações não são invertidas.
 
 ## Movimento
@@ -119,7 +119,8 @@ O app usa `100dvh` (não `100vh`) e respeita `env(safe-area-inset-*)` quando ins
 **Símbolo "O salto":** o "j" minúsculo de "jogo" desenhado como um jogador subindo, com o pingo solto virando a bola no ponto mais alto. O traço é único, com pontas redondas; só a bola leva cor.
 
 - **Logotipo completo:** símbolo + "dá jogo" em minúsculas, Plus Jakarta Sans 800, tracking -0.045em. O símbolo tem 1,5× a altura das letras.
-- **Ícone do app (PWA, favicon):** fundo `color-brand` (#142a40), haste branca e bola `color-brand-ball` (amarelo-sol). O fundo azul-marinho mantém o ícone distinto do verde do WhatsApp, por onde os convites circulam.
+- **Marca (laranja, 2.0):** símbolo "D" com o atleta e a bola laranja (`public/brand/source/simbolo-original.png`), sobre grafite `#121214`. Laranja `color-primary` (#ff7a1a) nos botões, links e item ativo; grafite `color-brand` nas superfícies da marca. Texto sobre o laranja é escuro (`color-on-primary`, 7,3:1), nunca branco (2,6:1). Títulos de tela em itálico pesado, como o "Dá Jogo". Referência visual: `docs/design-system/referencia-marca-laranja.png`. A marca anterior (azul) está na tag git `tema-azul-original`.
+- **Ícone do app (PWA, favicon):** o símbolo sobre o grafite `#121214`, gerado por `pnpm icons`.
 - **Fundos claros:** haste `color-brand` e bola `color-primary` (menta). O amarelo-sol não aparece sobre fundos claros.
 - **Fundos escuros:** haste branca e bola amarelo-sol.
 - **Área de respiro:** em volta do símbolo, no mínimo o diâmetro da bola. **Tamanho mínimo:** 24px.

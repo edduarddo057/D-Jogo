@@ -70,7 +70,7 @@
 }
 
 .heroTitle {
-  font: var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
+  font: italic var(--text-title-lg-weight) var(--text-title-lg-size) / var(--text-title-lg-line) var(--font-display);
   letter-spacing: var(--text-title-lg-tracking);
 }
 

@@ -1,6 +1,6 @@
 /* Medalha de pódio: fita em V em cima e moeda metálica com o ícone gravado */
 .coin {
-  --metal: var(--color-on-brand-accent);
+  --metal: var(--color-medal-green);
 
   position: relative;
   display: grid;
@@ -53,7 +53,7 @@
 }
 
 .green {
-  --metal: var(--color-on-brand-accent);
+  --metal: var(--color-medal-green);
 }
 
 .bronze {
@@ -61,7 +61,7 @@
 }
 
 .gold {
-  --metal: var(--color-brand-ball);
+  --metal: var(--color-medal-gold);
 }
 
 .locked {

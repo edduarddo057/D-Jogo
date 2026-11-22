@@ -5,7 +5,7 @@ import { useSheetParam } from '@/components/Sheet';
 import { useOrganizes } from '@/features/groups';
 import { PaySheet } from '@/features/payments';
 import styles from './AppShell.module.css';
-import { BrandLogo } from './BrandLogo';
+import { BrandLogo } from '@/components/BrandLogo';
 import { OfflineBanner } from './OfflineBanner';
 import { RouteAnnouncer } from './RouteAnnouncer';
 import { SkipLink } from './SkipLink';

@@ -6,7 +6,7 @@ export type ResolvedTheme = 'light' | 'dark';
 
 /** Mesma chave lida pelo script inline do index.html, que aplica o tema antes da primeira pintura. */
 export const THEME_STORAGE_KEY = 'dajogo:theme';
-const THEME_COLOR: Record<ResolvedTheme, string> = { light: '#f4f6f8', dark: '#0b1622' };
+const THEME_COLOR: Record<ResolvedTheme, string> = { light: '#f5f5f7', dark: '#0e0e10' };
 
 const prefersDark = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'

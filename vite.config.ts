@@ -19,7 +19,7 @@ export default defineConfig(({ command, mode }) => {
         // Registro manual em src/app/pwa.ts: só sem mocks, e com aviso de atualização (architecture.md § 12)
         registerType: 'prompt',
         injectRegister: false,
-        includeAssets: ['favicon.svg', 'favicon-32x32.png', 'apple-touch-icon.png', 'brand/*.svg'],
+        includeAssets: ['favicon-32x32.png', 'apple-touch-icon.png', 'brand/*.png'],
         manifest: {
           id: '/',
           name: 'Dá Jogo',
@@ -32,8 +32,8 @@ export default defineConfig(({ command, mode }) => {
           display: 'standalone',
           // em pé é forçado no código (OrientationGuard); 'any' deixa o placar do dia de jogo deitar
           orientation: 'any',
-          background_color: '#142a40',
-          theme_color: '#142a40',
+          background_color: '#121214',
+          theme_color: '#121214',
           categories: ['sports', 'social', 'lifestyle'],
           icons: [
             { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },

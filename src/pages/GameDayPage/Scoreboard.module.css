@@ -46,7 +46,7 @@
 
 .round {
   margin: 0;
-  font: var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
+  font: italic var(--text-title-weight) var(--text-title-size) / var(--text-title-line) var(--font-display);
 }
 
 .muted {
