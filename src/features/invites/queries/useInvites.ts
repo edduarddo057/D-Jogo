@@ -38,7 +38,13 @@ export function useRevokeInvite(groupId: string) {
 }
 
 export function useInvitePreview(code: string) {
-  return useQuery({ queryKey: inviteKeys.preview(code), queryFn: () => getInvitePreview(code), retry: false });
+  return useQuery({
+    queryKey: inviteKeys.preview(code),
+    queryFn: () => getInvitePreview(code),
+    retry: false,
+    // sem convite (cadastro direto), não há o que buscar
+    enabled: code.trim() !== '',
+  });
 }
 
 export function useAcceptInvite() {
