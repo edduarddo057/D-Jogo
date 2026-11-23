@@ -23,9 +23,11 @@ jobs:
     timeout-minutes: 15
     env:
       BASE_PATH: /D-Jogo/
-      # Ainda não há back-end publicado: o app sobe com os dados de teste (MSW), como na homologação (docs/deploy.md).
-      VITE_API_MOCK: 'true'
-      VITE_API_URL: /v1
+      # Back-end (D-Jogo-api no Render): crie a variável API_URL em Settings › Secrets and variables ›
+      # Actions › Variables, ex.: https://dajogo-api.onrender.com/v1. Sem ela, o app sobe com os dados
+      # de teste (MSW), como na homologação.
+      VITE_API_MOCK: ${{ vars.API_URL && 'false' || 'true' }}
+      VITE_API_URL: ${{ vars.API_URL || '/v1' }}
       VITE_APP_URL: https://edduarddo057.github.io/D-Jogo
       VITE_TERMS_VERSION: '2026-11'
       # Modo demonstração (/demo): só a impressão digital da senha (gere com pnpm demo:senha "senha").
