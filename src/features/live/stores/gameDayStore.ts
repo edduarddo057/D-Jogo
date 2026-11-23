@@ -15,6 +15,13 @@ export interface GameDayPlayer extends DrawPlayer {
 }
 
 export type GameDayStep = 'arrival' | 'teams' | 'score' | 'end';
+
+/** Fundamento da modalidade (RN-17a), guardado na sessão para o sorteio funcionar sem internet. */
+export interface GameDaySkill {
+  id: string;
+  label: string;
+  short: string;
+}
 export type NextRound = 'winner_stays' | 'same' | 'redraw';
 
 export interface GameDayDraw {
@@ -52,6 +59,8 @@ export interface GameDaySession {
   matchId: string;
   groupId: string;
   teamSize: number;
+  /** Fundamentos da modalidade (vazio = só nível geral). */
+  skills?: GameDaySkill[];
   players: GameDayPlayer[];
   arrived: string[];
   step: GameDayStep;
@@ -81,7 +90,7 @@ export interface GameDaySession {
 interface GameDayState {
   sessions: Record<string, GameDaySession>;
   start: (
-    s: Pick<GameDaySession, 'matchId' | 'groupId' | 'teamSize' | 'players'> & {
+    s: Pick<GameDaySession, 'matchId' | 'groupId' | 'teamSize' | 'players' | 'skills'> & {
       arrived?: string[];
       /** Envios que já nascem na fila (ex.: a chegada pré-marcada). Só numa sessão nova. */
       outbox?: OutboxOp[];
@@ -119,6 +128,7 @@ export const useGameDayStore = create<GameDayState>()(
                 [s.matchId]: {
                   ...existing,
                   players: [...existing.players, ...s.players.filter((p) => !known.has(p.id))],
+                  skills: existing.skills ?? s.skills,
                 },
               },
             };
@@ -130,7 +140,7 @@ export const useGameDayStore = create<GameDayState>()(
                 ...s,
                 arrived,
                 step: 'arrival',
-                criteria: { level: true, gender: true, position: true },
+                criteria: { level: true, levelBy: 'overall', gender: true, position: true },
                 format: null,
                 draw: null,
                 court: [0, 1],
@@ -175,7 +185,14 @@ export const useGameDayStore = create<GameDayState>()(
 /** Sorteia entre quem chegou, com os critérios da sessão. */
 export function makeDraw(s: GameDaySession, format: { teamCount: number; playersPerTeam: number }): GameDayDraw {
   const present = s.players.filter((p) => s.arrived.includes(p.id));
-  const { teams, bench } = drawTeams(present, format.teamCount, format.playersPerTeam, s.criteria);
+  const { teams, bench } = drawTeams(
+    present,
+    format.teamCount,
+    format.playersPerTeam,
+    s.criteria,
+    Math.random,
+    (s.skills ?? []).map((k) => k.id),
+  );
   return { clientId: newClientId('sorteio'), ...format, criteria: s.criteria, teams, bench };
 }
 

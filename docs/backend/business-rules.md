@@ -50,6 +50,8 @@ Cada regra tem um código (`RN-xx`) para ser citada em tarefas, testes e mensage
 
 **RN-17 · Nível na turma.** O dono define o nível (1 a 5) de cada membro, só para a própria turma. Sem nível definido, o sorteio usa 3 (meio da escala). O nível não aparece para os jogadores.
 
+**RN-17a · Fundamentos (2.0).** Cada modalidade pode ter fundamentos (vôlei: saque, recepção, ataque, levantamento e passe; as outras, por enquanto, nenhum). O dono dá a cada membro uma nota de 1 a 10 em cada fundamento, na turma; fundamento sem nota fica em branco. Como o nível, só o dono vê. Se a pessoa não tem nível geral mas tem notas, o nível geral vale a média das notas ÷ 2 (arredondada, de 1 a 5).
+
 **RN-18 · Pendências da turma.** Para o dono, a turma traz um resumo do que precisa ser resolvido: Pix informados aguardando validação, mensalidades do mês pendentes, mensalistas sem resposta e fila com vaga livre (promoção manual) na partida da vez, partidas em rascunho e partida da vez com prazo vencido e lista aberta. A partida da vez (`focusMatchId`) é a próxima não finalizada nem cancelada. Sorteio não é pendência: pertence ao modo ao vivo.
 
 ## 2. Partidas e presença
@@ -131,6 +133,8 @@ Substitui o sorteio por padrões com publicação (antigas RN-50 a RN-55). O mod
 **RN-102 · Sortear.** Sorteia só entre quem chegou, quantas vezes quiser. Recebe nº de times e jogadores por time; se houver menos gente que as vagas, os times ficam o mais iguais possível; quem sobra fica no banco. Menos de 2 pessoas chegadas → `NOT_ENOUGH_PLAYERS`. O último formato e critérios ficam guardados para sugerir no próximo sorteio. Os times ficam só com o dono (não são publicados para os jogadores).
 
 **RN-103 · Critérios combináveis.**
+
+**RN-103a · Sorteio por fundamentos (2.0).** Com o critério de nível ligado, o organizador escolhe equilibrar pelo **nível geral** (padrão) ou pelos **fundamentos**: aí o sorteio tenta deixar a soma de cada fundamento o mais parecida possível entre os times (ninguém fica com todos os bons sacadores, por exemplo), mantendo o equilíbrio de gênero e de posições quando esses critérios estão ligados. Fundamento sem nota conta como nível geral × 2 (sem nível = 3 → 6).
 - **Gênero (time misto):** distribui masculino e feminino por igual entre os times; quem não informou gênero é distribuído depois.
 - **Nível:** dentro de cada grupo, ordena por nível na turma (RN-17) e distribui em serpentina (A, B, C, C, B, A…). Sem nível = 3.
 - **Posição:** troca jogadores de mesmo nível entre times para não concentrar a mesma posição principal.

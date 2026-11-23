@@ -178,6 +178,25 @@ describe('4.2 Visão de organizador da turma', () => {
     );
   });
 
+  it('Membros: fundamentos de 1 a 10 na folha da pessoa (vôlei), salvos no OK', async () => {
+    const user = userEvent.setup();
+    renderApp('/organizar/g_sabado/membros');
+    await user.click(await screen.findByRole('button', { name: /Hugo/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Hugo' });
+    const fundamentos = within(sheet).getByRole('group', { name: 'Fundamentos, de 1 a 10' });
+    expect(
+      within(fundamentos)
+        .getAllByRole('group')
+        .map((g) => g.getAttribute('aria-label')),
+    ).toEqual(['Saque', 'Recepção', 'Ataque', 'Levantamento', 'Passe']);
+    const saque = within(fundamentos).getByRole('group', { name: 'Saque' });
+    await user.click(within(saque).getByRole('button', { name: 'Mais' })); // do "–" vai para 5
+    await user.click(within(saque).getByRole('button', { name: 'Mais' }));
+    expect(saque).toHaveTextContent('6');
+    await user.click(within(sheet).getByRole('button', { name: 'OK' }));
+    await waitFor(() => expect(db.memberships.find((m) => m.id === 'mb_sab_u_hugo')?.skills).toEqual({ serve: 6 }));
+  });
+
   it('Caixa: novo lançamento pelo + e correção por estorno, nunca apagando', async () => {
     const user = userEvent.setup();
     renderApp('/organizar/g_sabado/caixa');
@@ -294,6 +313,27 @@ describe('4.3 Dia de jogo', () => {
 
     await user.click(screen.getByRole('button', { name: 'Sortear times com 7' }));
     expect(await screen.findByText('2 times de 2 · 3 de fora')).toBeInTheDocument();
+  });
+
+  it('sorteio por fundamentos: escolhe nas regras, vê as médias de cada time e o servidor recebe', async () => {
+    const user = userEvent.setup();
+    renderApp('/organizar/g_sabado/dia-de-jogo/m_sab');
+    await screen.findByRole('heading', { name: 'Quem chegou?' });
+    await user.click(screen.getByRole('button', { name: 'Regras do sorteio' }));
+    const rules = await screen.findByRole('dialog', { name: 'Regras do sorteio' });
+    await user.click(within(rules).getByRole('tab', { name: 'Fundamentos' }));
+    expect(within(rules).getByText(/Equilibra cada fundamento entre os times: saque, recepção/)).toBeInTheDocument();
+    expect(within(rules).getByText(/Equilibra fundamentos, gênero e posição/)).toBeInTheDocument();
+    await user.click(within(rules).getByRole('button', { name: 'OK' }));
+
+    await user.click(screen.getByRole('button', { name: /^Sortear times com/ }));
+    const medias = await screen.findByLabelText('Médias do Azul nos fundamentos');
+    expect(medias).toHaveTextContent(/Saq .*Rec .*Ata .*Lev .*Pas /);
+    await user.click(screen.getByRole('button', { name: 'Começar' }));
+    await waitFor(() =>
+      expect(db.liveDraws.filter((d) => d.matchId === 'm_sab').at(-1)?.criteria.levelBy).toBe('skills'),
+    );
+    await waitFor(() => expect(useGameDayStore.getState().sessions.m_sab?.outbox.length ?? 0).toBe(0));
   });
 
   it('placar em tela cheia e travado: +1 abre quem fez, −1 tira também de quem recebeu', async () => {

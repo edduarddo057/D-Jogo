@@ -25,3 +25,5 @@ export {
 } from './queries/useAccount';
 export { ProfileForm, type ProfileFormProps } from './components/ProfileForm/ProfileForm';
 export { positionLabels } from './utils/positions';
+export { SkillsEditor, type SkillsEditorProps } from './components/SkillsEditor/SkillsEditor';
+export { filledSkills, type SkillScores } from './utils/skills';

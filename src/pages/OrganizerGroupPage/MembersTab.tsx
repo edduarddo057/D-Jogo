@@ -1,6 +1,7 @@
-import { Search } from 'lucide-react';
+import { Search, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar } from '@/components/Avatar';
+import { Button } from '@/components/Button';
 import { List, ListItem } from '@/components/List';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { Section } from '@/components/Section';
@@ -16,7 +17,9 @@ import {
   type Member,
   type MembershipType,
 } from '@/features/groups';
-import { positionLabels, useSports } from '@/features/profile';
+import { AddPersonForm } from '@/features/demo';
+import { filledSkills, positionLabels, SkillsEditor, useSports, type SkillScores } from '@/features/profile';
+import { isDemoActive } from '@/lib/demo';
 import { monthName } from '@/lib/format';
 import { toast } from '@/stores';
 import styles from './OrganizerGroupPage.module.css';
@@ -34,6 +37,8 @@ export function MembersTab({ group }: { group: Group }) {
   const sports = useSports();
   const sheet = useSheetParam('membro');
   const [q, setQ] = useState('');
+  const [adding, setAdding] = useState(false);
+  const demo = isDemoActive();
   if (members.isPending) return <SkeletonList rows={5} />;
   const all = members.data ?? [];
   const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -59,6 +64,12 @@ export function MembersTab({ group }: { group: Group }) {
 
   return (
     <>
+      {/* Demonstração: incluir alguém só pelo nome, sem conta nem convite */}
+      {demo && (
+        <Button variant="tint" block icon={<UserPlus size={20} aria-hidden="true" />} onClick={() => setAdding(true)}>
+          Adicionar pessoa
+        </Button>
+      )}
       <div className={styles.search}>
         <Search size={18} aria-hidden="true" className={styles.searchIcon} />
         <TextField
@@ -85,6 +96,20 @@ export function MembersTab({ group }: { group: Group }) {
           <p className={styles.muted}>Nenhum avulso{q ? ' com esse nome' : ''}.</p>
         )}
       </Section>
+      {demo && (
+        <Sheet open={adding} onClose={() => setAdding(false)} title="Adicionar pessoa" closeLabel="Fechar">
+          <AddPersonForm
+            groupId={group.id}
+            sportId={group.sportId}
+            onAdded={(m) => {
+              toast(`${m.user.name.split(' ')[0]} entrou na turma e está confirmado no próximo jogo.`, {
+                tone: 'success',
+              });
+              setAdding(false);
+            }}
+          />
+        </Sheet>
+      )}
       {selected && (
         <MemberSheet
           key={selected.id}
@@ -118,6 +143,9 @@ function MemberSheet({
   const remove = useRemoveMember(group.id);
   const [type, setType] = useState<MembershipType>(member.type);
   const [level, setLevel] = useState<string>(member.level ? String(member.level) : '0');
+  const [skills, setSkills] = useState<SkillScores>(() => ({ ...(member.skills ?? {}) }));
+  const sports = useSports();
+  const hasSkills = (sports.data?.find((s) => s.id === group.sportId)?.skills.length ?? 0) > 0;
   const [confirmRemove, setConfirmRemove] = useState(false);
   const owner = member.role === 'owner';
   const [nextMonth] = useState(() => {
@@ -127,10 +155,12 @@ function MemberSheet({
   });
 
   const save = () => {
-    const patch: { type?: MembershipType; level?: number | null } = {};
+    const patch: { type?: MembershipType; level?: number | null; skills?: Record<string, number> | null } = {};
     if (type !== member.type) patch.type = type;
     const lv = level === '0' ? null : Number(level);
     if (lv !== (member.level ?? null)) patch.level = lv;
+    const sk = filledSkills(skills);
+    if (JSON.stringify(sk) !== JSON.stringify(member.skills ?? null)) patch.skills = sk;
     if (Object.keys(patch).length === 0) return onClose();
     update.mutate(
       { memberId: member.id, ...patch },
@@ -195,6 +225,15 @@ function MemberSheet({
         />
         <span className={styles.help}>Só você vê. Usado para equilibrar os times. Sem nível conta como 3.</span>
       </div>
+      {hasSkills && (
+        <div className={styles.field}>
+          <span className={styles.label}>Fundamentos (1 a 10)</span>
+          <SkillsEditor sportId={group.sportId} value={skills} onChange={setSkills} />
+          <span className={styles.help}>
+            Só você vê. No sorteio por fundamentos, cada um é equilibrado entre os times. Sem nota, conta o nível × 2.
+          </span>
+        </div>
+      )}
       <List>
         <ListItem inline title="Gênero" trailing={<span className={styles.value}>{genderText(member.gender)}</span>} />
         <ListItem

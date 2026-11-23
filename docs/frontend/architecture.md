@@ -348,12 +348,12 @@ Regras:
 | Item | Decisão |
 | --- | --- |
 | Plugin | `vite-plugin-pwa`, estratégia `generateSW`, `registerType: 'prompt'`. |
-| Manifest | `name: "Dá Jogo"`, `short_name: "Dá Jogo"`, `display: standalone`, `start_url: "/"`, `scope: "/"`, `lang: pt-BR`, `background_color: #142a40`, `theme_color: #142a40`, ícones 192, 512 e `maskable` gerados do símbolo "O salto" (`public/brand/`). |
+| Manifest | `name: "Dá Jogo"`, `short_name: "Dá Jogo"`, `display: standalone`, `start_url: "/"`, `scope: "/"`, `lang: pt-BR`, `background_color: #142a40`, `theme_color: #142a40`, ícones 192, 512 e `maskable` gerados do símbolo (`pnpm icons`, a partir de `public/brand/source/`). |
 | Cache | Precache do app shell (HTML, JS, CSS, ícones) e das fontes, que são servidas pelo próprio app (Fontsource, só subconjuntos latinos no precache). **Respostas da API não ficam no service worker**: o TanStack Query cuida dos dados, para nunca mostrar vaga ou pagamento desatualizado como se fosse atual. |
 | Atualização | Quando há versão nova, aparece um toast "Nova versão disponível — Atualizar" (`src/app/pwa.ts`). A atualização nunca acontece sozinha. Com os mocks ligados, o service worker do PWA não é registrado. |
 | Instalação (Android/desktop) | Guardar o `beforeinstallprompt` (`usePwaStore`) e oferecer "Instalar app" em Perfil › Preferências (`InstallAppCard`) e depois da primeira presença confirmada, nunca na primeira visita. |
 | Instalação (iPhone) | Sem aviso nativo: um card com 3 passos ("Compartilhar → Adicionar à Tela de Início") aparece no Safari quando o app não está instalado. |
-| Tela de abertura | Fundo `#142a40` com o símbolo; no iOS, `apple-touch-icon` e as metatags de status bar. |
+| Tela de abertura | Animação em `public/splash.css` (fundo azul-marinho): as peças do próprio logo (`public/brand/splash/`) entram uma a uma e formam o símbolo em ~1,8 s; começa quando as peças carregam; `src/app/splash.ts` só tira a abertura quando a animação acaba e o app montou. Com "reduzir movimento", o logo aparece parado. No iOS, `apple-touch-icon` e as metatags de status bar. |
 | Offline | Abre o app shell e mostra os últimos dados em memória com o aviso "Sem conexão". |
 
 ## 13. Acessibilidade

@@ -1284,6 +1284,19 @@ export interface components {
                 value: number;
                 label: string;
             }[];
+            /** @description Fundamentos da modalidade, com nota de 1 a 10 por pessoa na turma (RN-17a). Vazio = a modalidade ainda não tem. */
+            skills: {
+                /** @example serve */
+                id: string;
+                /** @example Saque */
+                label: string;
+                /** @example Saq */
+                short: string;
+            }[];
+        };
+        /** @description Nota de 1 a 10 por fundamento (id do fundamento → nota). Fundamento sem nota fica de fora (RN-17a). */
+        SkillScores: {
+            [key: string]: number;
         };
         SportProfileInput: {
             sportId: string;
@@ -1449,6 +1462,8 @@ export interface components {
             joinedAt: string;
             /** @description Nível na turma, definido pelo organizador (RN-17). Null = não definido (vale 3 no sorteio). Só para o dono. */
             level?: number | null;
+            /** @description Notas de 1 a 10 nos fundamentos da modalidade, definidas pelo organizador (RN-17a). Só para o dono. */
+            skills?: components["schemas"]["SkillScores"] | null;
             /** @description Gênero informado pelo jogador. Só para o dono e o próprio. */
             gender?: components["schemas"]["Gender"] | null;
             /** @description Situação da mensalidade do mês atual (só mensalistas; só para o dono e o próprio). */
@@ -1712,6 +1727,11 @@ export interface components {
         DrawCriteria: {
             /** @description Equilibra pelo nível que o organizador definiu na turma (sem nível = 3). */
             level: boolean;
+            /**
+             * @description Com level ligado: overall = nível geral (o padrão, quando não vem); skills = equilibra cada fundamento entre os times (RN-103a).
+             * @enum {string}
+             */
+            levelBy?: "overall" | "skills";
             /** @description Time misto — distribui masculino e feminino por igual. */
             gender: boolean;
             /** @description Evita concentrar a mesma posição num time. */
@@ -1738,6 +1758,8 @@ export interface components {
         };
         LivePlayer: components["schemas"]["UserSummary"] & {
             gender?: components["schemas"]["Gender"] | null;
+            /** @description Notas dos fundamentos na turma (RN-17a), para o sorteio por fundamentos. */
+            skills?: components["schemas"]["SkillScores"] | null;
             membershipType?: components["schemas"]["MembershipType"];
             /** @description Avulso que ainda deve o jogo ("Deve R$ 25" na chegada). */
             owesCents?: number | null;
@@ -2953,6 +2975,8 @@ export interface operations {
                     type?: components["schemas"]["MembershipType"];
                     /** @description Nível na turma (RN-17). */
                     level?: number | null;
+                    /** @description Notas dos fundamentos (RN-17a). Substitui todas; null apaga. */
+                    skills?: components["schemas"]["SkillScores"] | null;
                 };
             };
         };

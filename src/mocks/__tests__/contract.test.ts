@@ -28,6 +28,12 @@ const mocked = new Set(
     .map((info) => `${String(info.method)} ${normalize(String(info.path).replace(API_URL, ''))}`),
 );
 
+/**
+ * Exceções conhecidas: rotas que só existem no modo demonstração (src/mocks/handlers/demo.ts), de
+ * propósito fora do contrato. Toda rota nova fora do contrato continua quebrando o teste.
+ */
+const DEMO_ONLY = new Set(['POST /demo/groups/:p/players']);
+
 describe('contrato da API × mocks', () => {
   it('toda operação do openapi.yaml tem handler no MSW', () => {
     const missing = [...contract].filter((op) => !mocked.has(op));
@@ -35,7 +41,14 @@ describe('contrato da API × mocks', () => {
   });
 
   it('nenhum handler fora do contrato', () => {
-    const extra = [...mocked].filter((op) => !contract.has(op));
+    const extra = [...mocked].filter((op) => !contract.has(op) && !DEMO_ONLY.has(op));
     expect(extra).toEqual([]);
+  });
+
+  it('as rotas só do modo demonstração continuam fora do contrato (não vazam para a API real)', () => {
+    for (const op of DEMO_ONLY) {
+      expect(mocked.has(op)).toBe(true);
+      expect(contract.has(op)).toBe(false);
+    }
   });
 });

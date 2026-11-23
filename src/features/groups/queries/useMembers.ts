@@ -43,8 +43,15 @@ export function useUpdateMember(groupId: string) {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateGroup(groupId);
   return useMutation({
-    mutationFn: ({ memberId, ...patch }: { memberId: string; type?: MembershipType; level?: number | null }) =>
-      updateMember(groupId, memberId, patch),
+    mutationFn: ({
+      memberId,
+      ...patch
+    }: {
+      memberId: string;
+      type?: MembershipType;
+      level?: number | null;
+      skills?: Record<string, number> | null;
+    }) => updateMember(groupId, memberId, patch),
     onSuccess: (member) => {
       queryClient.setQueryData<Member[]>(memberKeys.list(groupId), (old) =>
         old?.map((m) => (m.id === member.id ? member : m)),

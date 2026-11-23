@@ -1,5 +1,6 @@
 import { drawTeams } from '@/features/live/utils/draw';
-import { findUser, membershipOf, newId, nowIso, type DbLiveDraw, type DrawCriteria } from '../db';
+import { findGroup, findUser, membershipOf, newId, nowIso, type DbLiveDraw, type DrawCriteria } from '../db';
+import { SPORTS } from '../handlers/sports';
 
 const TEAM_NAMES = ['Time A', 'Time B', 'Time C', 'Time D', 'Time E', 'Time F', 'Time G', 'Time H'];
 
@@ -17,10 +18,12 @@ export function liveDraw(req: LiveDrawRequest, random: () => number = Math.rando
   const players = req.playerIds.map((id) => ({
     id,
     level: membershipOf(req.groupId, id)?.level ?? null,
+    skills: membershipOf(req.groupId, id)?.skills ?? null,
     gender: findUser(id)?.gender ?? null,
     position: findUser(id)?.sportProfile?.positions[0] ?? null,
   }));
-  const { teams, bench } = drawTeams(players, req.teamCount, req.playersPerTeam, req.criteria, random);
+  const skillIds = SPORTS.find((s) => s.id === findGroup(req.groupId)?.sportId)?.skills.map((k) => k.id) ?? [];
+  const { teams, bench } = drawTeams(players, req.teamCount, req.playersPerTeam, req.criteria, random, skillIds);
   return {
     id: newId('ld'),
     matchId: req.matchId,

@@ -119,7 +119,8 @@ O app usa `100dvh` (não `100vh`) e respeita `env(safe-area-inset-*)` quando ins
 **Símbolo "O salto":** o "j" minúsculo de "jogo" desenhado como um jogador subindo, com o pingo solto virando a bola no ponto mais alto. O traço é único, com pontas redondas; só a bola leva cor.
 
 - **Logotipo completo:** símbolo + "dá jogo" em minúsculas, Plus Jakarta Sans 800, tracking -0.045em. O símbolo tem 1,5× a altura das letras.
-- **Ícone do app (PWA, favicon):** fundo `color-brand` (#142a40), haste branca e bola `color-brand-ball` (amarelo-sol). O fundo azul-marinho mantém o ícone distinto do verde do WhatsApp, por onde os convites circulam.
+- **Marca (2.0):** símbolo "D" com o atleta e a bola, em verde, sobre as cores da base (azul-marinho `color-brand`, menta `color-primary`). Títulos de tela em itálico pesado, como o "Dá Jogo". O original fica em `public/brand/source/`. A marca anterior está na tag git `tema-azul-original`.
+- **Ícone do app (PWA, favicon):** o símbolo sobre o azul-marinho `#142a40`, gerado por `pnpm icons`.
 - **Fundos claros:** haste `color-brand` e bola `color-primary` (menta). O amarelo-sol não aparece sobre fundos claros.
 - **Fundos escuros:** haste branca e bola amarelo-sol.
 - **Área de respiro:** em volta do símbolo, no mínimo o diâmetro da bola. **Tamanho mínimo:** 24px.

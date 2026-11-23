@@ -15,9 +15,15 @@ export function RouteLoading() {
 /** Abertura do app enquanto a sessão é verificada e a primeira tela carrega. */
 export function Splash() {
   return (
-    // Igual à abertura estática do index.html (public/splash.css), para a troca não piscar
-    <div id="splash" role="status" aria-label="Abrindo o Dá Jogo">
-      <img src="/brand/logo-on-dark.svg" alt="" width="300" height="91" />
+    // O último quadro da abertura animada (public/splash.css), parado: fica por baixo dela, então a troca
+    // não pisca nem reinicia a animação
+    <div className="splash splash-static" role="status" aria-label="Abrindo o Dá Jogo">
+      <div className="splash-mark">
+        <img className="splash-logo" src="/brand/symbol.png" alt="" width="914" height="656" />
+      </div>
+      <p className="splash-word" aria-hidden="true">
+        Dá <span>Jogo</span>
+      </p>
     </div>
   );
 }

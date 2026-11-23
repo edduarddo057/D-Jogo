@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { List, ListItem } from '@/components/List';
 import { fromState, NavBar, NavIconButton } from '@/components/NavBar';
 import { Section } from '@/components/Section';
+import { SegmentedControl } from '@/components/SegmentedControl';
 import { ConfirmSheet, Sheet } from '@/components/Sheet';
 import { SkeletonList } from '@/components/Skeleton';
 import { Stepper } from '@/components/Stepper';
@@ -27,15 +28,19 @@ import {
   teamColor,
   teamLetter,
   teamLevel,
+  teamSkills,
   teamName,
   useGameDayStore,
   useGameDaySync,
   winnerStays,
   type GameDayPlayer,
+  type GameDaySkill,
   type GameDaySession,
   type NextRound,
 } from '@/features/live';
 import { positionLabels, useSports } from '@/features/profile';
+import { AddPersonForm } from '@/features/demo';
+import { isDemoActive } from '@/lib/demo';
 import { formatMoneyShort } from '@/lib/format';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
@@ -106,6 +111,7 @@ export function GameDayPage() {
           matchId,
           groupId,
           teamSize: sport?.defaultTeamSize ?? 6,
+          skills: sport?.skills ?? [],
           arrived: fresh ? everyone : state.arrivedUserIds,
           outbox: fresh ? everyone.map((userId) => ({ kind: 'arrival' as const, userId, arrived: true })) : [],
           players: state.players.map((p) => ({
@@ -113,6 +119,7 @@ export function GameDayPage() {
             name: p.name,
             photoUrl: p.photoUrl ?? null,
             level: p.level ?? null,
+            skills: p.skills ?? null,
             gender: p.gender ?? null,
             position: p.primaryPosition ?? null,
             membershipType: p.membershipType ?? 'monthly',
@@ -206,6 +213,7 @@ function Flow({
   const set = (fn: (s: GameDaySession) => Partial<GameDaySession>) => update(s.matchId, fn);
   const byId = useMemo(() => new Map(s.players.map((p) => [p.id, p])), [s.players]);
   const present = s.players.filter((p) => s.arrived.includes(p.id));
+  const skills = s.skills ?? sports.data?.find((x) => x.id === sportId)?.skills ?? [];
   const format = s.format ?? suggestFormat(present.length, s.teamSize);
   useWakeLock(s.step === 'score');
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -370,6 +378,7 @@ function Flow({
           </List>
           <AddMissing
             session={s}
+            sportId={sportId}
             onAdd={(p) =>
               set((cur) => ({
                 players: [...cur.players, p],
@@ -395,6 +404,7 @@ function Flow({
               format={format}
               presentCount={present.length}
               criteria={s.criteria}
+              skills={skills}
               onFormat={(f) => set(() => ({ format: f }))}
               onCriteria={(criteria) => set(() => ({ criteria }))}
             />
@@ -410,6 +420,7 @@ function Flow({
       {s.step === 'teams' && draw0 && (
         <TeamsStep
           session={s}
+          skills={skills}
           short={short}
           name={(id) => first(byId.get(id)?.name ?? '')}
           presentCount={present.length}
@@ -441,7 +452,16 @@ function Flow({
   );
 }
 
-function AddMissing({ session, onAdd }: { session: GameDaySession; onAdd: (p: GameDayPlayer) => void }) {
+function AddMissing({
+  session,
+  sportId,
+  onAdd,
+}: {
+  session: GameDaySession;
+  sportId: string;
+  onAdd: (p: GameDayPlayer) => void;
+}) {
+  const demo = isDemoActive();
   const members = useMembers(session.groupId);
   const [open, setOpen] = useState(false);
   const known = new Set(session.players.map((p) => p.id));
@@ -452,35 +472,65 @@ function AddMissing({ session, onAdd }: { session: GameDaySession; onAdd: (p: Ga
         Adicionar quem não estava na lista
       </Button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Quem chegou sem estar na lista" closeLabel="Fechar">
-        {members.isPending ? (
-          <SkeletonList rows={3} />
-        ) : others.length === 0 ? (
-          <p>Todo mundo da turma já está na lista.</p>
-        ) : (
-          <List>
-            {others.map((m) => (
-              <ListItem
-                key={m.id}
-                leading={<Avatar name={m.user.name} id={m.user.id} src={m.user.photoUrl} decorative />}
-                title={m.user.name}
-                meta={MEMBERSHIP_LABEL[m.type]}
-                onClick={() => {
-                  onAdd({
-                    id: m.user.id,
-                    name: m.user.name,
-                    photoUrl: m.user.photoUrl ?? null,
-                    level: m.level ?? null,
-                    gender: m.gender ?? null,
-                    position: m.user.primaryPosition ?? null,
-                    membershipType: m.type,
-                    owesCents: null,
-                  });
-                  toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
-                }}
-              />
-            ))}
-          </List>
+        {/* Demonstração: dá para incluir alguém novo só pelo nome, sem conta */}
+        {demo && (
+          <Section title="Pessoa nova">
+            <AddPersonForm
+              groupId={session.groupId}
+              sportId={sportId}
+              submitLabel="Adicionar e marcar que chegou"
+              onAdded={(m) => {
+                onAdd({
+                  id: m.user.id,
+                  name: m.user.name,
+                  photoUrl: m.user.photoUrl ?? null,
+                  level: m.level ?? null,
+                  skills: m.skills ?? null,
+                  gender: m.gender ?? null,
+                  position: m.user.primaryPosition ?? null,
+                  membershipType: m.type,
+                  owesCents: null,
+                });
+                toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
+                setOpen(false);
+              }}
+            />
+          </Section>
         )}
+        {(() => {
+          const list = members.isPending ? (
+            <SkeletonList rows={3} />
+          ) : others.length === 0 ? (
+            !demo && <p>Todo mundo da turma já está na lista.</p>
+          ) : (
+            <List>
+              {others.map((m) => (
+                <ListItem
+                  key={m.id}
+                  leading={<Avatar name={m.user.name} id={m.user.id} src={m.user.photoUrl} decorative />}
+                  title={m.user.name}
+                  meta={MEMBERSHIP_LABEL[m.type]}
+                  onClick={() => {
+                    onAdd({
+                      id: m.user.id,
+                      name: m.user.name,
+                      photoUrl: m.user.photoUrl ?? null,
+                      level: m.level ?? null,
+                      skills: m.skills ?? null,
+                      gender: m.gender ?? null,
+                      position: m.user.primaryPosition ?? null,
+                      membershipType: m.type,
+                      owesCents: null,
+                    });
+                    toast(`${first(m.user.name)} chegou.`, { tone: 'success' });
+                  }}
+                />
+              ))}
+            </List>
+          );
+          // na demonstração, a lista da turma vem depois de "Pessoa nova", com título
+          return demo && others.length > 0 ? <Section title="Da turma">{list}</Section> : list;
+        })()}
       </Sheet>
     </>
   );
@@ -488,7 +538,8 @@ function AddMissing({ session, onAdd }: { session: GameDaySession; onAdd: (p: Ga
 
 /** "Equilibra nível, gênero e posição" — os critérios ligados, numa linha. */
 function criteriaText(c: GameDaySession['criteria']) {
-  const on = [c.level && 'nível', c.gender && 'gênero', c.position && 'posição'].filter(Boolean) as string[];
+  const level = c.levelBy === 'skills' ? 'fundamentos' : 'nível';
+  const on = [c.level && level, c.gender && 'gênero', c.position && 'posição'].filter(Boolean) as string[];
   if (on.length === 0) return 'Sorteio livre, sem critérios';
   return `Equilibra ${on.length === 1 ? on[0] : `${on.slice(0, -1).join(', ')} e ${on.at(-1)}`}`;
 }
@@ -498,12 +549,15 @@ function DrawSettings({
   format,
   presentCount,
   criteria,
+  skills,
   onFormat,
   onCriteria,
 }: {
   format: { teamCount: number; playersPerTeam: number };
   presentCount: number;
   criteria: GameDaySession['criteria'];
+  /** Fundamentos da modalidade: com eles, dá para equilibrar por fundamentos (RN-103a). */
+  skills: GameDaySkill[];
   onFormat: (f: { teamCount: number; playersPerTeam: number }) => void;
   onCriteria: (c: GameDaySession['criteria']) => void;
 }) {
@@ -539,6 +593,24 @@ function DrawSettings({
         checked={criteria.level}
         onCheckedChange={(v) => onCriteria({ ...criteria, level: v })}
       />
+      {criteria.level && skills.length > 0 && (
+        <div className={styles.levelBy}>
+          <SegmentedControl
+            label="Equilibrar o nível por"
+            options={[
+              { value: 'overall', label: 'Nível geral' },
+              { value: 'skills', label: 'Fundamentos' },
+            ]}
+            value={criteria.levelBy ?? 'overall'}
+            onChange={(v) => onCriteria({ ...criteria, levelBy: v })}
+          />
+          <span className={styles.levelByHelp}>
+            {criteria.levelBy === 'skills'
+              ? `Equilibra cada fundamento entre os times: ${skills.map((k) => k.label.toLowerCase()).join(', ')}.`
+              : 'Usa o nível de cada um (1 a 5) para deixar os times parelhos.'}
+          </span>
+        </div>
+      )}
       <Switch
         label="Equilibrar por gênero"
         checked={criteria.gender}
@@ -556,6 +628,7 @@ function DrawSettings({
 
 function TeamsStep({
   session: s,
+  skills,
   short,
   name,
   presentCount,
@@ -566,6 +639,7 @@ function TeamsStep({
   onBack,
 }: {
   session: GameDaySession;
+  skills: GameDaySkill[];
   short: (id: string) => string;
   name: (id: string) => string;
   presentCount: number;
@@ -580,6 +654,8 @@ function TeamsStep({
   if (!d) return null;
   const present = s.players.filter((p) => s.arrived.includes(p.id));
   const bench = d.bench.map(name);
+  const bySkills = s.criteria.level && s.criteria.levelBy === 'skills' && skills.length > 0;
+  const skillIds = skills.map((k) => k.id);
   return (
     <>
       <div className={styles.summary}>
@@ -600,6 +676,7 @@ function TeamsStep({
           format={{ teamCount: d.teams.length, playersPerTeam: d.playersPerTeam }}
           presentCount={presentCount}
           criteria={s.criteria}
+          skills={skills}
           onFormat={onFormat}
           onCriteria={onCriteria}
         />
@@ -612,8 +689,17 @@ function TeamsStep({
               <TeamTag index={i} letter={teamLetter(i)} /> {teamName(i)}
             </span>
           }
-          aside={s.criteria.level ? `nível ${teamLevel(team, present)}` : undefined}
+          aside={s.criteria.level && !bySkills ? `nível ${teamLevel(team, present)}` : undefined}
         >
+          {bySkills && (
+            <p className={styles.teamSkills} aria-label={`Médias do ${teamName(i)} nos fundamentos`}>
+              {teamSkills(team, present, skillIds).map((avg, k) => (
+                <span key={skillIds[k]} className={styles.skillChip}>
+                  {skills[k]?.short} <b>{avg.toLocaleString('pt-BR')}</b>
+                </span>
+              ))}
+            </p>
+          )}
           <List>
             {team.map((id) => (
               <ListItem key={id} inline title={name(id)} trailing={<span className={styles.muted}>{short(id)}</span>} />

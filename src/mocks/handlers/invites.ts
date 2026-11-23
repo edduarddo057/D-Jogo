@@ -33,6 +33,7 @@ export function acceptInviteFor(code: string, userId: string) {
         status: 'active',
         joinedAt: nowIso(),
         level: null,
+        skills: null,
       });
     }
     invite.uses += 1;

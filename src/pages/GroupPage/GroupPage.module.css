@@ -10,7 +10,7 @@
 }
 
 .title {
-  font: var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
+  font: italic var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
   letter-spacing: var(--text-display-tracking);
 }
 

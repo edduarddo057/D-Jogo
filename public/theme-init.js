@@ -11,3 +11,22 @@
     /* sem localStorage: fica no tema claro */
   }
 })();
+
+// Abertura animada: só começa quando as peças do logo estão prontas (senão animaria peças invisíveis).
+// Marca o início em window.__splashStart para src/app/splash.ts esperar o fim da animação.
+document.addEventListener('DOMContentLoaded', function () {
+  var splash = document.getElementById('splash');
+  if (!splash) return;
+  var go = function () {
+    if (splash.classList.contains('splash-go')) return;
+    splash.classList.add('splash-go');
+    window.__splashStart = performance.now();
+  };
+  var imgs = Array.prototype.slice.call(splash.querySelectorAll('img'));
+  Promise.all(
+    imgs.map(function (img) {
+      return img.decode ? img.decode().catch(function () {}) : Promise.resolve();
+    }),
+  ).then(go);
+  setTimeout(go, 2500); // rede muito lenta: começa assim mesmo
+});

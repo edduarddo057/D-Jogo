@@ -66,6 +66,8 @@ export interface DbMembership {
   joinedAt: string;
   /** Nível na turma, definido pelo dono (RN-17). null = 3 no sorteio. */
   level: number | null;
+  /** Notas de 1 a 10 nos fundamentos da modalidade, definidas pelo dono (RN-17a). */
+  skills: Record<string, number> | null;
 }
 export interface DbInvite {
   code: string;
@@ -152,6 +154,8 @@ export interface DrawCriteria {
   level: boolean;
   gender: boolean;
   position: boolean;
+  /** Com `level`: nível geral (padrão) ou fundamentos (RN-103a). */
+  levelBy?: 'overall' | 'skills';
 }
 export interface DbLiveTeam {
   id: string;
@@ -277,6 +281,30 @@ const DEFAULT_RULES: DbGroupRules = {
 };
 export const defaultRules = (): DbGroupRules => structuredClone(DEFAULT_RULES);
 
+/**
+ * Notas de exemplo nos fundamentos do vôlei (RN-17a), a partir do nível e da posição: levantador
+ * levanta melhor, líbero recebe e passa melhor, oposto ataca melhor… Sem nível, sem notas.
+ */
+const SKILL_BIAS: Record<string, Partial<Record<string, number>>> = {
+  setter: { setting: 3, attack: -2, pass: 1 },
+  outside: { attack: 1, reception: 1 },
+  opposite: { attack: 2, reception: -2, serve: 1 },
+  middle: { attack: 1, reception: -2, setting: -1 },
+  libero: { reception: 3, pass: 2, attack: -3, setting: -1 },
+};
+export function sampleSkills(level: number | null, position: string | null, seed = 0): Record<string, number> | null {
+  if (!level) return null;
+  const base = level * 2;
+  const wobble = (k: number) => ((seed * 7 + k * 3) % 3) - 1; // −1, 0 ou +1, sempre igual para a mesma pessoa
+  return Object.fromEntries(
+    ['serve', 'reception', 'attack', 'setting', 'pass'].map((k, i) => [
+      k,
+      Math.min(10, Math.max(1, base + (SKILL_BIAS[position ?? '']?.[k] ?? 0) + wobble(i))),
+    ]),
+  );
+}
+export { ALL_ON as allNotificationsOn };
+
 /** Gerador pseudoaleatório fixo, para os dados de exemplo serem sempre iguais. */
 function seeded(seed: number) {
   let s = seed;
@@ -342,7 +370,7 @@ function seed() {
   const groups = [sabado, quarta];
 
   const joinedAt = '2026-03-07T12:00:00Z';
-  const memberships: DbMembership[] = PEOPLE.filter((p) => p[6]).map(([userId, , , , level, , type]) => ({
+  const memberships: DbMembership[] = PEOPLE.filter((p) => p[6]).map(([userId, , , position, level, , type], i) => ({
     id: `mb_sab_${userId}`,
     groupId: 'g_sabado',
     userId,
@@ -350,6 +378,7 @@ function seed() {
     status: 'active' as const,
     joinedAt: userId === 'u_marina' ? '2026-02-01T12:00:00Z' : joinedAt,
     level,
+    skills: sampleSkills(level, position, i),
   }));
   const QUARTA: Array<[string, MembershipType]> = [
     ['u_otavio', 'monthly'],
@@ -369,6 +398,7 @@ function seed() {
       status: 'active' as const,
       joinedAt,
       level: null,
+      skills: null,
     })),
   );
 
@@ -968,7 +998,18 @@ export function resetDb(overrides: Partial<Pick<Db, 'session'>> = {}): Db {
   return db;
 }
 
+/**
+ * Troca o banco inteiro (modo demonstração: o banco da demo, carregado do aparelho ou novo).
+ * `nextSeq` continua a numeração dos ids de onde parou, para não repetir id depois de recarregar.
+ */
+export function replaceDb(next: Db, nextSeq?: number): Db {
+  db = next;
+  if (nextSeq !== undefined) seq = Math.max(seq, nextSeq);
+  return db;
+}
+
 let seq = 1000;
+export const currentSeq = () => seq;
 export const newId = (prefix: string) => `${prefix}_${++seq}`;
 export const nowIso = () => new Date().toISOString();
 

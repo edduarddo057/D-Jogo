@@ -125,6 +125,8 @@
   --color-on-brand-surface: rgba(255, 255, 255, 0.08);
   --color-on-brand-border: rgba(184, 200, 214, 0.45);
   --color-brand-ball: #ffc94d;
+  --color-medal-gold: #ffc94d;
+  --color-medal-green: #3ccf86;
   --color-inverse: #142a40;
   --color-on-inverse: #ffffff;
   --color-success-bg: #e2f6eb;
@@ -184,6 +186,8 @@
   --color-on-brand-surface: rgba(255, 255, 255, 0.08);
   --color-on-brand-border: rgba(184, 200, 214, 0.45);
   --color-brand-ball: #ffc94d;
+  --color-medal-gold: #ffc94d;
+  --color-medal-green: #3ccf86;
   --color-inverse: #e4ecf2;
   --color-on-inverse: #0f2233;
   --color-success-bg: #15372a;
@@ -245,6 +249,8 @@
     --color-on-brand-surface: rgba(255, 255, 255, 0.08);
     --color-on-brand-border: rgba(184, 200, 214, 0.45);
     --color-brand-ball: #ffc94d;
+    --color-medal-gold: #ffc94d;
+    --color-medal-green: #3ccf86;
     --color-inverse: #e4ecf2;
     --color-on-inverse: #0f2233;
     --color-success-bg: #15372a;
