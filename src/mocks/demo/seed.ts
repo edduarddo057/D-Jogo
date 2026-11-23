@@ -1,3 +1,4 @@
+import { TERMS_VERSION } from '@/lib/config';
 import type { Db, DbGroup, DbMatch, DbMembership, DbParticipation, DbUser, Gender } from '../db';
 import { allNotificationsOn, defaultRules, sampleSkills } from '../db';
 
@@ -47,7 +48,8 @@ export function createDemoDb(now = new Date()): Db {
     nickname: p.nickname,
     photoUrl: null,
     profileCompleted: true,
-    termsVersion: import.meta.env.VITE_TERMS_VERSION ?? null,
+    // a mesma versão que o app exige (senão a demo pede para aceitar os termos)
+    termsVersion: TERMS_VERSION,
     termsAcceptedAt: iso(now),
     gender: p.gender,
     sportProfile: { sportId: 'volleyball', positions: [p.position] },

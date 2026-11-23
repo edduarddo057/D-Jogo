@@ -2,6 +2,11 @@
 
 As versões seguem o [roadmap de versões](docs/roadmap-versoes.md). Decisões de cada mudança em [docs/decisions.md](docs/decisions.md).
 
+## 2.1.1 — 23/11/2026
+
+### Corrigido
+- **Demonstração no GitHub Pages:** depois da senha, a demo pedia para aceitar os termos de uso, porque o organizador da demo era criado com a versão dos termos de uma variável que só existia no ambiente local. Agora usa a mesma versão que o app exige, e o workflow define `VITE_TERMS_VERSION`.
+
 ## 2.1.0 — 23/11/2026
 
 Contrato da API **0.4.0** (só acréscimos: quem usa a 0.3.0 continua funcionando).

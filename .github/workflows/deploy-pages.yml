@@ -27,6 +27,7 @@ jobs:
       VITE_API_MOCK: 'true'
       VITE_API_URL: /v1
       VITE_APP_URL: https://edduarddo057.github.io/D-Jogo
+      VITE_TERMS_VERSION: '2026-11'
       # Modo demonstração (/demo): só a impressão digital da senha (gere com pnpm demo:senha "senha").
       # Ela vai para o JavaScript publicado de qualquer jeito; para trocar sem mexer aqui, crie a variável
       # DEMO_PASSWORD_HASH em Settings › Secrets and variables › Actions › Variables.
