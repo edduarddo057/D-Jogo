@@ -31,6 +31,13 @@ describe('Modo demonstração', () => {
     await syncDone();
   });
 
+  it('o organizador da demo já tem os termos aceitos na versão que o app exige (não para em "aceitar termos")', async () => {
+    const { TERMS_VERSION } = await import('@/lib/config');
+    vi.stubEnv('VITE_TERMS_VERSION', '');
+    const demo = createDemoDb();
+    expect(demo.users.find((u) => u.id === demo.session.userId)?.termsVersion).toBe(TERMS_VERSION);
+  });
+
   it('o que foi feito fica salvo no aparelho e volta igual, sem repetir ids', () => {
     replaceDb(createDemoDb());
     db.rounds.push({
