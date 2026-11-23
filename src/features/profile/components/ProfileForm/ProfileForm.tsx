@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Check';
 import { Chips } from '@/components/Chips';
 import { TextField } from '@/components/TextField';
-import { TERMS_VERSION } from '@/lib/config';
+import { appUrl, TERMS_VERSION } from '@/lib/config';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import { uploadPhoto, type Gender, type Me } from '../../api/meApi';
@@ -189,11 +189,11 @@ export function ProfileForm({
       {mode === 'onboarding' && (
         <Checkbox checked={terms} onChange={setTerms} error={errors.terms}>
           Aceito os{' '}
-          <a href="/termos" target="_blank" rel="noreferrer">
+          <a href={appUrl('termos')} target="_blank" rel="noreferrer">
             termos de uso
           </a>{' '}
           e a{' '}
-          <a href="/privacidade" target="_blank" rel="noreferrer">
+          <a href={appUrl('privacidade')} target="_blank" rel="noreferrer">
             política de privacidade
           </a>
           .

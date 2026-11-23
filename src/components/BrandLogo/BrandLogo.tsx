@@ -1,5 +1,6 @@
 import { clsx } from 'clsx';
 import styles from './BrandLogo.module.css';
+import { appUrl } from '@/lib/config';
 
 export interface BrandLogoProps {
   /** "auto" segue o tema; "on-dark" para superfícies escuras (splash, cards da marca). */
@@ -21,8 +22,8 @@ export function BrandLogo({ tone = 'auto', size = 'md', symbolOnly, className }:
       role="img"
       aria-label="Dá Jogo"
     >
-      <img className={styles.symbolLight} src="/brand/symbol-on-light.png" alt="" width="914" height="656" />
-      <img className={styles.symbolDark} src="/brand/symbol.png" alt="" width="914" height="656" />
+      <img className={styles.symbolLight} src={appUrl('brand/symbol-on-light.png')} alt="" width="914" height="656" />
+      <img className={styles.symbolDark} src={appUrl('brand/symbol.png')} alt="" width="914" height="656" />
       {!symbolOnly && (
         <span className={styles.word} aria-hidden="true">
           Dá <span className={styles.accent}>Jogo</span>

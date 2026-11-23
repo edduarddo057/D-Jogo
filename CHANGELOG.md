@@ -30,6 +30,9 @@ Contrato da API **0.4.0** (só acréscimos: quem usa a 0.3.0 continua funcionand
 - Jogos não mostra mais "Último jogo" (o histórico fica no Perfil).
 - Textos de listas quebram em várias linhas em vez de cortar com "…".
 
+### Publicação
+- **GitHub Pages** em https://edduarddo057.github.io/D-Jogo/, pelo workflow `deploy-pages.yml` (a cada push na `develop`), com o app preparado para rodar na subpasta `/D-Jogo/`.
+
 ### Corrigido
 - O dia de jogo não trava mais em "Fechando o dia…" quando o servidor perde o modo ao vivo: reabre e reenvia, descarta o que não tem como ir e tenta de novo sozinho.
 - Folha aberta não rola mais a tela de trás.

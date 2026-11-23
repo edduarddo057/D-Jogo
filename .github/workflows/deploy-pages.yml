@@ -1,0 +1,72 @@
+name: Deploy GitHub Pages
+
+# Publica o app em https://edduarddo057.github.io/D-Jogo/ a cada push na develop.
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Um deploy por vez; um push novo não cancela o deploy que já está publicando.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_PATH: /D-Jogo/
+      # Ainda não há back-end publicado: o app sobe com os dados de teste (MSW), como na homologação (docs/deploy.md).
+      VITE_API_MOCK: 'true'
+      VITE_API_URL: /v1
+      VITE_APP_URL: https://edduarddo057.github.io/D-Jogo
+      # Modo demonstração (/demo): só a impressão digital da senha (gere com pnpm demo:senha "senha").
+      # Ela vai para o JavaScript publicado de qualquer jeito; para trocar sem mexer aqui, crie a variável
+      # DEMO_PASSWORD_HASH em Settings › Secrets and variables › Actions › Variables.
+      VITE_DEMO_PASSWORD_HASH: ${{ vars.DEMO_PASSWORD_HASH || 'aa2b8937d3748dfc2d038786e9d4483992833d19066509cf504d783321b41bdf' }}
+      VITE_DEMO_DAYS: '30'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Instalar dependências
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # O GitHub Pages não reescreve rotas: o 404.html devolve o app e o React Router abre a rota certa.
+      - name: Fallback da SPA
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Publicar
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
