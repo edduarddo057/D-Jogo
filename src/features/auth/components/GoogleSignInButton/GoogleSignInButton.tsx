@@ -4,63 +4,96 @@ import { GOOGLE_CLIENT_ID } from '@/lib/config';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import { useGoogleSignIn } from '../../hooks/useLogin';
-import { loadGoogleIdentity } from './googleIdentity';
+import { loadGoogleOAuth, type TokenClient } from './googleIdentity';
 import styles from './GoogleSignInButton.module.css';
 
-/** Botão oficial do Google (o Google exige o visual dele). Some se não houver Client ID. */
+/** "G" oficial do Google (as cores e a forma não podem mudar). */
+function GoogleMark() {
+  return (
+    <svg className={styles.mark} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
+    </svg>
+  );
+}
+
+/** Botão "Continuar com o Google" no visual do app. Some se não houver Client ID. */
 export function GoogleSignInButton() {
-  const box = useRef<HTMLDivElement>(null);
   const signIn = useGoogleSignIn();
-  const [state, setState] = useState<'loading' | 'ready' | 'failed'>('loading');
-  // o mutate do TanStack Query é estável: o botão é desenhado uma vez
   const { mutate } = signIn;
+  const client = useRef<TokenClient | null>(null);
+  const [waiting, setWaiting] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
     let alive = true;
-    loadGoogleIdentity()
-      .then((gsi) => {
-        if (!alive || !box.current) return;
-        gsi.initialize({
+    loadGoogleOAuth()
+      .then((oauth2) => {
+        if (!alive) return;
+        client.current = oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
-          ux_mode: 'popup',
-          use_fedcm_for_button: true,
-          callback: ({ credential }) => {
-            if (!credential) return;
-            mutate(credential, {
+          scope: 'openid email profile',
+          callback: ({ access_token: accessToken }) => {
+            setWaiting(false);
+            if (!accessToken) return;
+            mutate(accessToken, {
               onError: (e) =>
                 toast(isApiError(e) ? messageFor(e.code) : 'Não deu para entrar com o Google. Tente de novo.', {
                   tone: 'error',
                 }),
             });
           },
+          // fechou a janela do Google sem escolher a conta: volta ao normal, sem aviso
+          error_callback: (error) => {
+            setWaiting(false);
+            if (error.type === 'popup_failed_to_open')
+              toast('O navegador bloqueou a janela do Google. Libere pop-ups e tente de novo.', { tone: 'error' });
+          },
         });
-        const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-        gsi.renderButton(box.current, {
-          type: 'standard',
-          theme: dark ? 'filled_black' : 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'pill',
-          logo_alignment: 'center',
-          width: Math.min(400, Math.max(200, Math.round(box.current.clientWidth))),
-          locale: 'pt-BR',
-        });
-        setState('ready');
       })
-      .catch(() => alive && setState('failed'));
+      .catch(() => alive && setFailed(true));
     return () => {
       alive = false;
     };
   }, [mutate]);
 
   if (!GOOGLE_CLIENT_ID) return null;
+  const busy = waiting || signIn.isPending;
   return (
-    <div className={styles.wrap} aria-busy={state === 'loading' || signIn.isPending}>
-      <div ref={box} className={styles.button} hidden={state === 'failed'} />
-      {state === 'loading' && <Spinner label="Carregando o Google" />}
-      {signIn.isPending && <Spinner label="Entrando" />}
-      {state === 'failed' && (
+    <div className={styles.wrap}>
+      <button
+        type="button"
+        className={styles.button}
+        aria-busy={busy}
+        disabled={busy || failed}
+        onClick={() => {
+          if (!client.current) {
+            toast('O Google ainda está carregando. Tente de novo em instantes.');
+            return;
+          }
+          setWaiting(true);
+          client.current.requestAccessToken({ prompt: '' });
+        }}
+      >
+        {busy ? <Spinner size="sm" label="Entrando" /> : <GoogleMark />}
+        <span>{signIn.isPending ? 'Entrando…' : 'Continuar com o Google'}</span>
+      </button>
+      {failed && (
         <p className={styles.error} role="alert">
           Não deu para carregar o Google. Confira a internet e recarregue a página.
         </p>

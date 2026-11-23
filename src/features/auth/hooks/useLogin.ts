@@ -31,7 +31,7 @@ export function useVerifyOtp() {
 export function useGoogleSignIn() {
   const onSession = useOpenSession();
   return useMutation({
-    mutationFn: (credential: string) => signInWithGoogle(credential),
+    mutationFn: (accessToken: string) => signInWithGoogle(accessToken),
     meta: { silent: true },
     onSuccess: onSession,
   });

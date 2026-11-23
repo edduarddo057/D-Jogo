@@ -1329,6 +1329,7 @@ export interface components {
         };
         SportProfileInput: {
             sportId: string;
+            /** @description Vazio = joga em todas as posições. */
             positions: string[];
         };
         /**
@@ -2149,7 +2150,8 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    credential: string;
+                    credential?: string;
+                    accessToken?: string;
                 };
             };
         };
@@ -2296,7 +2298,8 @@ export interface operations {
                 "application/json": {
                     name: components["schemas"]["PersonName"];
                     nickname: components["schemas"]["Nickname"];
-                    sportProfile: components["schemas"]["SportProfileInput"];
+                    /** @description Opcional; sem ele (ou sem posições), a pessoa joga em todas. */
+                    sportProfile?: components["schemas"]["SportProfileInput"];
                     gender?: components["schemas"]["Gender"] | null;
                     /** @example 2026-11 */
                     acceptedTermsVersion: string;

@@ -25,7 +25,7 @@ export async function updateMe(body: {
 export async function completeOnboarding(body: {
   name: string;
   nickname: string;
-  sportProfile: SportProfileInput;
+  sportProfile?: SportProfileInput;
   gender?: Gender | null;
   acceptedTermsVersion: string;
   phone?: string;

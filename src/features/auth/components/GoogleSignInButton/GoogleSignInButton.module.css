@@ -2,14 +2,52 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  align-items: center;
-  min-height: 4.4rem;
+  width: 100%;
 }
 
+/* Botão do Google no visual do app (altura e cantos do Button), como o guia de marca do Google permite. */
 .button {
   display: flex;
+  gap: var(--space-3);
+  align-items: center;
   justify-content: center;
   width: 100%;
+  min-height: 5.2rem;
+  padding: 0 var(--space-6);
+  border: 0.1rem solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+  font: var(--text-button-weight) var(--text-button-size) / var(--text-button-line) var(--font-sans);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.button:disabled {
+  cursor: progress;
+  opacity: 0.8;
+}
+
+.button:focus-visible {
+  outline: 0.3rem solid var(--color-primary);
+  outline-offset: 0.2rem;
+}
+
+.button:hover:not(:disabled) {
+  background: var(--color-surface-sunken);
+}
+
+.button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.mark {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
 }
 
 .error {

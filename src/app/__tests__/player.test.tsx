@@ -303,7 +303,8 @@ describe('3.1 Entrar pelo convite', () => {
     await screen.findByRole('heading', { name: 'Seu perfil' });
     await user.type(screen.getByLabelText('Nome'), 'Joana Prado');
     await user.type(screen.getByLabelText('Apelido'), 'joana');
-    await user.click(screen.getByRole('button', { name: 'Ponteiro' }));
+    // posições ficam para depois, no perfil (sem escolher, vale todas)
+    expect(screen.queryByRole('button', { name: 'Ponteiro' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Concluir e entrar na turma' }));
     expect(await screen.findByText(/aceite os termos/)).toBeInTheDocument();
     await user.click(screen.getByRole('checkbox'));

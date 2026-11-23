@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Dá Jogo API
-  version: 0.5.0
+  version: 0.6.0
   summary: Contrato do Dá Jogo 2.0 (turmas, jogos, presença, fila, pagamentos, caixa, avisos e dia de jogo).
   description: |
     Contrato independente de tecnologia. Regras de negócio em `docs/backend/business-rules.md` (citadas como RN-xx);
@@ -105,9 +105,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [credential]
+              description: |
+                `credential` = ID token do botão oficial do Google; `accessToken` = token do fluxo de
+                popup (botão próprio do app), conferido no Google (tokeninfo + userinfo).
+              minProperties: 1
               properties:
                 credential: { type: string, minLength: 20 }
+                accessToken: { type: string, minLength: 20 }
       responses:
         '200':
           description: Sessão aberta, igual ao login por código.
@@ -204,11 +208,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, nickname, sportProfile, acceptedTermsVersion]
+              required: [name, nickname, acceptedTermsVersion]
               properties:
                 name: { $ref: '#/components/schemas/PersonName' }
                 nickname: { $ref: '#/components/schemas/Nickname' }
-                sportProfile: { $ref: '#/components/schemas/SportProfileInput' }
+                sportProfile:
+                  $ref: '#/components/schemas/SportProfileInput'
+                  description: Opcional; sem ele (ou sem posições), a pessoa joga em todas.
                 gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
                 acceptedTermsVersion: { type: string, examples: ['2026-11'] }
                 phone:
@@ -1820,7 +1826,11 @@ components:
       required: [sportId, positions]
       properties:
         sportId: { type: string }
-        positions: { type: array, minItems: 1, maxItems: 3, items: { type: string } }
+        positions:
+          type: array
+          maxItems: 3
+          items: { type: string }
+          description: Vazio = joga em todas as posições.
     Gender:
       type: string
       enum: [male, female]

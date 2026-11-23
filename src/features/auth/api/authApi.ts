@@ -14,9 +14,9 @@ export async function verifyOtp(challengeId: string, code: string): Promise<Auth
   return data;
 }
 
-/** Entrar com Google: o `credential` é o ID token que o botão do Google entrega. */
-export async function signInWithGoogle(credential: string): Promise<AuthSession> {
-  const { data } = await http.post<AuthSession>('/auth/google', { credential }, { skipAuthRefresh: true });
+/** Entrar com Google: token de acesso do popup do Google; a API confere com o Google. */
+export async function signInWithGoogle(accessToken: string): Promise<AuthSession> {
+  const { data } = await http.post<AuthSession>('/auth/google', { accessToken }, { skipAuthRefresh: true });
   return data;
 }
 

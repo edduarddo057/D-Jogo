@@ -86,7 +86,6 @@ export function ProfileForm({
     if (!nick.success) next.nickname = 'Use de 3 a 20 letras sem acento, números, ponto ou _.';
     else if (nickTaken)
       next.nickname = suggestion ? `Esse apelido já existe. Que tal “${suggestion}”?` : 'Esse apelido já existe.';
-    if (positions.length === 0) next.positions = 'Escolha ao menos uma posição.';
     const e164 = askPhone ? toE164Brazil(phone) : null;
     if (askPhone && !e164) next.phone = 'Digite o celular com DDD, ex.: (11) 98765-4321.';
     if (mode === 'onboarding' && !terms) next.terms = 'Para entrar, aceite os termos e a política de privacidade.';
@@ -100,8 +99,8 @@ export function ProfileForm({
         const res = await onboard.mutateAsync({
           name: name.trim(),
           nickname: nick.data ?? nickname,
-          sportProfile,
           gender: g,
+          // posições ficam para depois, no perfil: sem escolher, a pessoa joga em todas
           acceptedTermsVersion: TERMS_VERSION,
           ...(e164 ? { phone: e164 } : {}),
           ...(inviteCode ? { inviteCode } : {}),
@@ -188,21 +187,16 @@ export function ProfileForm({
         />
       )}
 
-      {sport && (
+      {sport && mode === 'edit' && (
         <div className={styles.group}>
           <Chips
             label="Onde você joga?"
-            hint={sport.name.toLowerCase()}
+            hint={`${sport.name.toLowerCase()} · opcional · sem escolher, vale todas`}
             multiple
             options={sport.positions.map((p) => ({ value: p.id, label: p.label.replace(/\(a\)$/, '') }))}
             value={positions}
             onChange={(v) => setPositions(v.slice(0, 3))}
           />
-          {errors.positions && (
-            <span className={styles.error} role="alert">
-              {errors.positions}
-            </span>
-          )}
         </div>
       )}
 

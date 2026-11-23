@@ -76,7 +76,7 @@ export const meHandlers = [
       const body = (await request.json()) as {
         name: string;
         nickname: string;
-        sportProfile: { sportId: string; positions: string[] };
+        sportProfile?: { sportId: string; positions: string[] };
         gender?: 'male' | 'female' | null;
         acceptedTermsVersion: string;
         inviteCode?: string;
@@ -86,7 +86,9 @@ export const meHandlers = [
       if (nicknameTaken(body.nickname, user.id)) return problem(409, 'NICKNAME_TAKEN', { rule: 'RN-03' });
       user.name = body.name.trim();
       user.nickname = body.nickname;
-      user.sportProfile = { sportId: body.sportProfile.sportId, positions: body.sportProfile.positions };
+      user.sportProfile = body.sportProfile?.positions.length
+        ? { sportId: body.sportProfile.sportId, positions: body.sportProfile.positions }
+        : null;
       user.gender = body.gender ?? null;
       user.termsVersion = body.acceptedTermsVersion;
       user.termsAcceptedAt = nowIso();

@@ -1,49 +1,40 @@
 /**
- * Google Identity Services (botão "Entrar com Google"). O script do Google só é baixado na tela
- * de entrar; o botão entrega um ID token (`credential`) que a API confere.
+ * Google Identity Services, fluxo de popup: o botão é do app (no visual dele, com o "G" oficial) e
+ * o Google devolve um token de acesso que a API confere (tokeninfo + userinfo). O script do Google
+ * é baixado assim que a tela de entrar abre, para o popup abrir no mesmo toque (sem bloqueio).
  */
-interface CredentialResponse {
-  credential?: string;
+export interface TokenResponse {
+  access_token?: string;
+  error?: string;
 }
-interface GoogleId {
-  initialize(options: {
+export interface TokenClient {
+  requestAccessToken(overrides?: { prompt?: '' | 'none' | 'consent' | 'select_account' }): void;
+}
+interface GoogleOAuth2 {
+  initTokenClient(config: {
     client_id: string;
-    callback: (response: CredentialResponse) => void;
-    ux_mode?: 'popup' | 'redirect';
-    auto_select?: boolean;
-    cancel_on_tap_outside?: boolean;
-    use_fedcm_for_button?: boolean;
-  }): void;
-  renderButton(
-    parent: HTMLElement,
-    options: {
-      type?: 'standard' | 'icon';
-      theme?: 'outline' | 'filled_blue' | 'filled_black';
-      size?: 'large' | 'medium' | 'small';
-      text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
-      shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-      logo_alignment?: 'left' | 'center';
-      width?: number;
-      locale?: string;
-    },
-  ): void;
+    scope: string;
+    callback: (response: TokenResponse) => void;
+    error_callback?: (error: { type: 'popup_closed' | 'popup_failed_to_open' | 'unknown' }) => void;
+  }): TokenClient;
 }
 declare global {
   interface Window {
-    google?: { accounts: { id: GoogleId } };
+    google?: { accounts: { oauth2: GoogleOAuth2 } };
   }
 }
 
 const SRC = 'https://accounts.google.com/gsi/client';
-let loading: Promise<GoogleId> | null = null;
+let loading: Promise<GoogleOAuth2> | null = null;
 
-export function loadGoogleIdentity(): Promise<GoogleId> {
-  if (window.google?.accounts?.id) return Promise.resolve(window.google.accounts.id);
-  loading ??= new Promise<GoogleId>((resolve, reject) => {
+export function loadGoogleOAuth(): Promise<GoogleOAuth2> {
+  if (window.google?.accounts?.oauth2) return Promise.resolve(window.google.accounts.oauth2);
+  loading ??= new Promise<GoogleOAuth2>((resolve, reject) => {
     const script = document.createElement('script');
     script.src = SRC;
     script.async = true;
-    script.onload = () => (window.google?.accounts?.id ? resolve(window.google.accounts.id) : reject(new Error('gsi')));
+    script.onload = () =>
+      window.google?.accounts?.oauth2 ? resolve(window.google.accounts.oauth2) : reject(new Error('gsi'));
     script.onerror = () => {
       loading = null;
       script.remove();
