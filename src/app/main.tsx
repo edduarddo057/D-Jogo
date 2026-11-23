@@ -10,11 +10,15 @@ import '@/styles/global.css';
 import { App } from './App';
 import { enableMocksIfNeeded } from './enableMocks';
 import { setupPwa } from './pwa';
+import { openInviteFromQuery } from '@/pages/shared/invite';
 import { hideSplashWhenDone } from './splash';
 
 async function start() {
   const container = document.getElementById('root');
   if (!container) throw new Error('Elemento #root não encontrado no index.html');
+
+  // Link de convite "?convite=CÓDIGO" → tela do convite (antes do roteador montar)
+  openInviteFromQuery();
 
   // Os mocks precisam estar ativos antes da primeira chamada à API (verificação da sessão).
   await enableMocksIfNeeded();

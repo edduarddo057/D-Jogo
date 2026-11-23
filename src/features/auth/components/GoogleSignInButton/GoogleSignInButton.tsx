@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Spinner } from '@/components/Spinner';
 import { GOOGLE_CLIENT_ID } from '@/lib/config';
+import { isInAppBrowser } from '@/lib/inAppBrowser';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import { useGoogleSignIn } from '../../hooks/useLogin';
+import { InAppBrowserNotice } from '../InAppBrowserNotice/InAppBrowserNotice';
 import { loadGoogleOAuth, type TokenClient } from './googleIdentity';
 import styles from './GoogleSignInButton.module.css';
 
@@ -31,8 +33,17 @@ function GoogleMark() {
   );
 }
 
-/** Botão "Continuar com o Google" no visual do app. Some se não houver Client ID. */
+/**
+ * "Continuar com o Google". Some sem Client ID; dentro do WhatsApp/Instagram (onde o Google não
+ * deixa entrar) vira o aviso para abrir no navegador.
+ */
 export function GoogleSignInButton() {
+  if (!GOOGLE_CLIENT_ID) return null;
+  if (isInAppBrowser()) return <InAppBrowserNotice />;
+  return <GoogleButton />;
+}
+
+function GoogleButton() {
   const signIn = useGoogleSignIn();
   const { mutate } = signIn;
   const client = useRef<TokenClient | null>(null);
@@ -72,7 +83,6 @@ export function GoogleSignInButton() {
     };
   }, [mutate]);
 
-  if (!GOOGLE_CLIENT_ID) return null;
   const busy = waiting || signIn.isPending;
   return (
     <div className={styles.wrap}>

@@ -38,6 +38,9 @@ export default defineConfig(({ command, isPreview }) => {
           background_color: '#142a40',
           theme_color: '#142a40',
           categories: ['sports', 'social', 'lifestyle'],
+          // Android: com o app instalado, links do app (convites) abrem nele, na janela já aberta
+          handle_links: 'preferred',
+          launch_handler: { client_mode: ['navigate-existing', 'auto'] },
           icons: [
             { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
             { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

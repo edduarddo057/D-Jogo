@@ -75,7 +75,7 @@ function NewGroupSheet({ open, onClose }: { open: boolean; onClose: () => void }
   const go = (text: string) => {
     const code = inviteCodeFrom(text);
     if (!code) {
-      setError('Cole o link inteiro que você recebeu, ex.: dajogo.app/convite/SABADO25.');
+      setError('Cole o link inteiro que você recebeu ou só o código do convite, ex.: SABADO25.');
       return;
     }
     navigate(`/convite/${code}`);

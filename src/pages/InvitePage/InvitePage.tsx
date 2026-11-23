@@ -9,6 +9,7 @@ import { List, ListItem } from '@/components/List';
 import { SkeletonList } from '@/components/Skeleton';
 import { useAcceptInvite, useInvitePreview } from '@/features/invites';
 import { useSports } from '@/features/profile';
+import { PHONE_LOGIN } from '@/lib/config';
 import { formatDay, formatMoneyShort, formatSchedule } from '@/lib/format';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast, useSessionStore } from '@/stores';
@@ -105,7 +106,13 @@ export function InvitePage() {
           }
         />
       </List>
-      <Dock note="Leva menos de 1 minuto. Só pedimos seu celular.">
+      <Dock
+        note={
+          PHONE_LOGIN
+            ? 'Leva menos de 1 minuto. Só pedimos seu celular.'
+            : 'Leva menos de 1 minuto: entre com sua conta Google e pronto.'
+        }
+      >
         <Button block loading={accept.isPending} onClick={join}>
           Entrar na turma
         </Button>

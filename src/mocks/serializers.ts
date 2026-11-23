@@ -360,7 +360,8 @@ export function monthsOnTimeOf(groupId: string, userId: string): number {
 export function toInvite(i: DbInvite, appUrl: string): Schema<'Invite'> {
   return {
     code: i.code,
-    url: `${appUrl}/convite/${i.code}`,
+    // ?convite= abre o index.html direto (status 200), em qualquer hospedagem e navegador embutido
+    url: `${appUrl}/?convite=${i.code}`,
     groupId: i.groupId,
     matchId: i.matchId,
     membershipType: i.membershipType,
