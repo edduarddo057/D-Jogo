@@ -11,8 +11,24 @@
     <script src="/theme-init.js"></script>
     <link rel="stylesheet" href="/splash.css" />
 
-    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- ?v=2: marca nova (símbolo "D"); força navegadores e apps a baixarem os ícones de novo -->
+    <link rel="icon" href="/favicon-32x32.png?v=2" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+
+    <!-- Prévia do link (WhatsApp, iMessage, Telegram, redes): imagem em public/og-image.png -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Dá Jogo" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Dá Jogo" />
+    <meta property="og:description" content="Junta a galera, organiza a turma e fecha o time." />
+    <meta property="og:url" content="%VITE_APP_URL%/" />
+    <meta property="og:image" content="%VITE_APP_URL%/og-image.png?v=2" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Símbolo do Dá Jogo e a frase: junta a galera, organiza a turma e fecha o time." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="%VITE_APP_URL%/og-image.png?v=2" />
 
     <!-- Instalado na tela inicial (iOS) -->
     <meta name="mobile-web-app-capable" content="yes" />
