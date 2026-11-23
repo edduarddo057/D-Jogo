@@ -32,7 +32,7 @@ const mocked = new Set(
  * Exceções conhecidas: rotas que só existem no modo demonstração (src/mocks/handlers/demo.ts), de
  * propósito fora do contrato. Toda rota nova fora do contrato continua quebrando o teste.
  */
-const DEMO_ONLY = new Set(['POST /demo/groups/:p/players']);
+const DEMO_ONLY = new Set(['POST /demo/groups/:p/players', 'GET /demo', 'PUT /demo', 'DELETE /demo']);
 
 describe('contrato da API × mocks', () => {
   it('toda operação do openapi.yaml tem handler no MSW', () => {

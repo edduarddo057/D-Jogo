@@ -1,22 +1,19 @@
 /**
- * Modo demonstração (sem conta e sem cadastro): o app inteiro roda com os mocks no navegador, numa turma
- * pronta, e os dados ficam salvos neste aparelho por um tempo. Entra por /demo, com senha.
+ * Modo demonstração: uma turma pronta, ligada à conta da pessoa (é preciso estar logado). Os dados
+ * ficam na API, separados dos dados reais (demo_worlds), e só somem quando a pessoa apaga — trocar de
+ * celular ou atualizar o app não mexe neles. O app avisa a API em cada pedido (X-Dajogo-Demo: 1).
  *
- * - `dajogo:demo`: { active, startedAt, expiresAt } — se a demo está ligada e até quando os dados valem.
- * - `dajogo:demo-db`: o banco da demo (src/mocks/demo), salvo a cada alteração.
- * Sair da demo só desliga (`active: false`): os dados continuam até expirar, para consultar depois.
+ * - `dajogo:demo`: { active, startedAt } — só se ESTE aparelho está mostrando a demo agora.
+ * - `dajogo:demo-db`: usado apenas com VITE_API_MOCK=true (dev), quando a demo roda nos mocks.
  */
 export const DEMO_KEY = 'dajogo:demo';
 export const DEMO_DB_KEY = 'dajogo:demo-db';
+export const DEMO_HEADER = 'X-Dajogo-Demo';
 
 export interface DemoState {
   active: boolean;
   startedAt: string;
-  expiresAt: string;
 }
-
-const DAY = 86_400_000;
-export const DEMO_DAYS = Number(import.meta.env.VITE_DEMO_DAYS ?? 30) || 30;
 
 function read(): DemoState | null {
   try {
@@ -31,41 +28,24 @@ function write(state: DemoState) {
   localStorage.setItem(DEMO_KEY, JSON.stringify(state));
 }
 
-/** Estado da demo; dados vencidos são apagados aqui. */
-export function getDemo(now = Date.now()): DemoState | null {
-  const state = read();
-  if (state && new Date(state.expiresAt).getTime() <= now) {
-    clearDemo();
-    return null;
-  }
-  return state;
+/** Estado da demo neste aparelho (sem prazo: os dados vivem na conta). */
+export function getDemo(): DemoState | null {
+  return read();
 }
 
-/** A demo está ligada neste aparelho (decide, na abertura do app, se os mocks entram). */
+/** Este aparelho está na demo (cada pedido à API vai para a demo da conta). */
 export function isDemoActive(): boolean {
   return getDemo()?.active === true;
 }
 
-/** Há dados de uma demo anterior, ainda dentro do prazo. */
-export function hasSavedDemo(): boolean {
-  return getDemo() !== null && localStorage.getItem(DEMO_DB_KEY) !== null;
-}
-
-/** Liga a demo: retoma os dados guardados (se ainda valem) ou começa do zero. */
+/** Liga a demo neste aparelho. */
 export function startDemo(now = Date.now()): DemoState {
-  const saved = getDemo(now);
-  const state: DemoState = saved
-    ? { ...saved, active: true }
-    : {
-        active: true,
-        startedAt: new Date(now).toISOString(),
-        expiresAt: new Date(now + DEMO_DAYS * DAY).toISOString(),
-      };
+  const state: DemoState = { active: true, startedAt: read()?.startedAt ?? new Date(now).toISOString() };
   write(state);
   return state;
 }
 
-/** Sai da demo sem apagar: os dados ficam até expirar. */
+/** Sai da demo neste aparelho (os dados continuam na conta). */
 export function leaveDemo() {
   const state = read();
   if (state) write({ ...state, active: false });
@@ -73,20 +53,20 @@ export function leaveDemo() {
 
 /**
  * Entra na demo a partir do app (Perfil): quem já tem conta não precisa da senha de /demo. O app
- * recarrega com os mocks; a sessão real fica guardada no cookie e volta ao sair.
+ * recarrega e passa a ver a demo da conta (na primeira vez, a API cria a turma pronta).
  */
 export function enterDemo() {
   startDemo();
   window.location.assign(import.meta.env.BASE_URL);
 }
 
-/** Volta ao app oficial: desliga a demo (os dados dela ficam salvos) e recarrega sem os mocks. */
+/** Volta ao app oficial: desliga a demo neste aparelho (os dados dela ficam na conta) e recarrega. */
 export function exitDemoToApp() {
   leaveDemo();
   window.location.assign(import.meta.env.BASE_URL);
 }
 
-/** Apaga tudo da demo deste aparelho. */
+/** Esquece a demo neste aparelho (a da conta é apagada pela API: deleteDemo). */
 export function clearDemo() {
   localStorage.removeItem(DEMO_KEY);
   localStorage.removeItem(DEMO_DB_KEY);

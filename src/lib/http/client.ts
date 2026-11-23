@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { toApiError } from './apiError';
+import { DEMO_HEADER, isDemoActive } from '@/lib/demo';
 
 /**
  * Cliente HTTP único (docs/frontend/architecture.md § 6.1).
@@ -44,6 +45,8 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean; skipAu
 http.interceptors.request.use((config) => {
   const token = auth?.getAccessToken();
   if (token) config.headers.set('Authorization', `Bearer ${token}`);
+  // na demonstração, a API responde com a demo da conta (separada dos dados reais)
+  if (isDemoActive()) config.headers.set(DEMO_HEADER, '1');
   return config;
 });
 

@@ -102,20 +102,32 @@ describe('Modo demonstração', () => {
     expect(screen.queryByRole('button', { name: 'Adicionar pessoa' })).not.toBeInTheDocument();
   });
 
-  it('/demo pede a senha: errada avisa, certa liga a demonstração', async () => {
+  it('/demo pede a senha: errada avisa, certa liga a demonstração da conta', async () => {
     vi.stubEnv('VITE_DEMO_PASSWORD_HASH', await sha256Hex('BoraJogar2026'));
     const user = userEvent.setup();
     renderApp('/demo');
     await screen.findByRole('heading', { name: 'Modo demonstração' });
+    // a conta já tem demo salva: continua de onde parou
+    const go = await screen.findByRole('button', { name: 'Continuar a demonstração' });
     await user.type(screen.getByLabelText('Senha da demonstração'), 'errada');
-    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(go);
     expect(await screen.findByText('Senha incorreta.')).toBeInTheDocument();
     expect(localStorage.getItem('dajogo:demo')).toBeNull();
 
     await user.clear(screen.getByLabelText('Senha da demonstração'));
     await user.type(screen.getByLabelText('Senha da demonstração'), 'BoraJogar2026');
-    await user.click(screen.getByRole('button', { name: 'Entrar na demonstração' }));
+    await user.click(screen.getByRole('button', { name: 'Continuar a demonstração' }));
     await waitFor(() => expect(JSON.parse(localStorage.getItem('dajogo:demo') ?? '{}').active).toBe(true));
+  });
+
+  it('sem estar logado, /demo pede para entrar na conta antes (a demo é da conta)', async () => {
+    vi.stubEnv('VITE_DEMO_PASSWORD_HASH', await sha256Hex('BoraJogar2026'));
+    db.session.userId = null;
+    const user = userEvent.setup();
+    const { router } = renderApp('/demo');
+    await user.click(await screen.findByRole('button', { name: 'Entrar na minha conta' }));
+    expect(screen.queryByLabelText('Senha da demonstração')).not.toBeInTheDocument();
+    await waitFor(() => expect(router.state.location.pathname).toBe('/entrar'));
   });
 
   it('sem senha configurada, /demo fica fechada', async () => {

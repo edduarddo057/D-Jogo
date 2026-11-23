@@ -1,5 +1,7 @@
-import { Lock, Presentation } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Lock, LogIn, Presentation } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router';
 import { Banner } from '@/components/Banner';
 import { BrandLogo } from '@/components/BrandLogo';
 import { Button } from '@/components/Button';
@@ -7,32 +9,34 @@ import { EmptyState } from '@/components/EmptyState';
 import { PageTitle } from '@/components/NavBar';
 import { ConfirmSheet } from '@/components/Sheet';
 import { TextField } from '@/components/TextField';
-import {
-  checkDemoPassword,
-  clearDemo,
-  DEMO_DAYS,
-  demoConfigured,
-  getDemo,
-  hasSavedDemo,
-  isDemoActive,
-  startDemo,
-} from '@/lib/demo';
-import { formatDay } from '@/lib/format';
-import styles from './DemoPage.module.css';
 import { appUrl } from '@/lib/config';
+import { checkDemoPassword, demoConfigured, isDemoActive, startDemo } from '@/lib/demo';
+import { deleteDemo, getDemoStatus } from '@/lib/demo/api';
+import { formatDay } from '@/lib/format';
+import { toast, useSessionStore } from '@/stores';
+import styles from './DemoPage.module.css';
+
+const PERKS = [
+  'Uma turma pronta, com 13 jogadores e um jogo, para testar tudo.',
+  'Rode a partida completa: chegada, sorteio, placar, resultado e resumo.',
+  'Fica salva na sua conta, separada dos seus dados reais, até você apagar. Em outro celular, continua de onde parou.',
+];
 
 /**
- * /demo: entrada do modo demonstração, com senha. Sem cadastro: entra como organizador de uma turma
- * pronta e roda uma partida completa. Os dados ficam salvos neste aparelho por DEMO_DAYS dias; quem já
- * tem uma demo salva continua de onde parou (src/lib/demo).
+ * /demo: entrada do modo demonstração, com senha. A demo é da conta (fica na API, separada dos dados
+ * reais): é preciso entrar antes. Quem já tem demo continua de onde parou; apagar é só pelo botão.
  */
 export function DemoPage() {
+  const navigate = useNavigate();
+  const status = useSessionStore((s) => s.status);
+  const authenticated = status === 'authenticated';
+  const queryClient = useQueryClient();
+  const saved = useQuery({ queryKey: ['demo', 'status'], queryFn: getDemoStatus, enabled: authenticated });
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | undefined>();
   const [checking, setChecking] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [saved, setSaved] = useState(() => hasSavedDemo());
-  const demo = getDemo();
+  const [deleting, setDeleting] = useState(false);
 
   if (!demoConfigured())
     return (
@@ -54,6 +58,34 @@ export function DemoPage() {
       </div>
     );
 
+  if (!authenticated)
+    return (
+      <div className={styles.page}>
+        <BrandLogo />
+        <PageTitle title="Modo demonstração" />
+        <ul className={styles.perks}>
+          {PERKS.map((p) => (
+            <li key={p}>{p}</li>
+          ))}
+        </ul>
+        <Banner tone="info" icon={<LogIn size={20} aria-hidden="true" />}>
+          A demonstração fica guardada na sua conta. Entre primeiro e volte aqui.
+        </Banner>
+        <Button
+          block
+          loading={status === 'unknown'}
+          onClick={() => {
+            useSessionStore.getState().setRedirectTo('/demo');
+            navigate('/entrar');
+          }}
+        >
+          Entrar na minha conta
+        </Button>
+      </div>
+    );
+
+  const exists = saved.data?.exists === true;
+
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!password.trim()) return setError('Digite a senha da demonstração.');
@@ -66,7 +98,21 @@ export function DemoPage() {
       return setError('Senha incorreta.');
     }
     startDemo();
-    window.location.assign(appUrl('')); // recarrega: o app abre já na demo, com a turma pronta
+    window.location.assign(appUrl('')); // recarrega: o app abre já na demo da conta
+  };
+
+  const reset = async () => {
+    setDeleting(true);
+    try {
+      await deleteDemo();
+      await queryClient.invalidateQueries({ queryKey: ['demo', 'status'] });
+      setConfirmReset(false);
+      toast('Demonstração apagada. A próxima começa do zero.', { tone: 'success' });
+    } catch {
+      toast('Não deu para apagar. Tente de novo.', { tone: 'error' });
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -74,14 +120,16 @@ export function DemoPage() {
       <BrandLogo />
       <PageTitle title="Modo demonstração" />
       <ul className={styles.perks}>
-        <li>Uma turma pronta, com 13 jogadores e um jogo hoje.</li>
-        <li>Rode a partida completa: chegada, sorteio, placar, resultado e resumo.</li>
-        <li>Sem cadastro. O que você fizer fica salvo neste aparelho por {DEMO_DAYS} dias.</li>
+        {PERKS.map((p) => (
+          <li key={p}>{p}</li>
+        ))}
       </ul>
 
-      {saved && demo && (
+      {exists && (
         <Banner tone="info" icon={<Presentation size={20} aria-hidden="true" />}>
-          Você tem uma demonstração salva até {formatDay(demo.expiresAt)}. Entre para continuar de onde parou.
+          Você tem uma demonstração salva na sua conta
+          {saved.data?.updatedAt ? `, usada por último em ${formatDay(saved.data.updatedAt)}` : ''}. Entre para
+          continuar de onde parou.
         </Banner>
       )}
 
@@ -98,11 +146,11 @@ export function DemoPage() {
           error={error}
         />
         <Button type="submit" block loading={checking}>
-          {saved ? 'Continuar a demonstração' : 'Entrar na demonstração'}
+          {exists ? 'Continuar a demonstração' : 'Entrar na demonstração'}
         </Button>
       </form>
 
-      {saved && (
+      {exists && (
         <Button variant="ghost" block onClick={() => setConfirmReset(true)}>
           Apagar e começar do zero
         </Button>
@@ -118,15 +166,13 @@ export function DemoPage() {
           </span>
         }
         consequences={[
-          'As partidas, rodadas e estatísticas da demonstração deste aparelho são apagadas.',
+          'Turma, pessoas, partidas, rodadas e estatísticas da demonstração são apagadas da sua conta, em todos os celulares.',
+          'Seus dados reais não mudam.',
           'Na próxima entrada, a turma volta ao começo, com todo mundo confirmado.',
         ]}
         actionLabel="Apagar a demonstração"
-        onConfirm={() => {
-          clearDemo();
-          setSaved(false);
-          setConfirmReset(false);
-        }}
+        loading={deleting}
+        onConfirm={() => void reset()}
       />
     </div>
   );

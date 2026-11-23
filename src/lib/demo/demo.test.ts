@@ -1,4 +1,4 @@
-import { checkDemoPassword, clearDemo, getDemo, hasSavedDemo, isDemoActive, leaveDemo, sha256Hex, startDemo } from '.';
+import { checkDemoPassword, clearDemo, getDemo, isDemoActive, leaveDemo, sha256Hex, startDemo } from '.';
 
 const DAY = 86_400_000;
 
@@ -6,28 +6,19 @@ describe('modo demonstração', () => {
   beforeEach(() => clearDemo());
   afterEach(() => vi.unstubAllEnvs());
 
-  it('liga, sai sem apagar e retoma com o mesmo prazo', () => {
+  it('liga e sai sem apagar (os dados ficam na conta); ao voltar, é a mesma demo', () => {
     const t0 = Date.parse('2026-11-22T12:00:00Z');
     const first = startDemo(t0);
     expect(isDemoActive()).toBe(true);
-    expect(new Date(first.expiresAt).getTime() - t0).toBe(30 * DAY);
-    localStorage.setItem('dajogo:demo-db', '{}');
-
     leaveDemo();
     expect(isDemoActive()).toBe(false);
-    expect(hasSavedDemo()).toBe(true); // os dados continuam para consultar
-
-    const again = startDemo(t0 + 5 * DAY);
-    expect(again.expiresAt).toBe(first.expiresAt); // não renova o prazo ao voltar
+    expect(startDemo(t0 + 5 * DAY).startedAt).toBe(first.startedAt);
     expect(isDemoActive()).toBe(true);
   });
 
-  it('depois do prazo, os dados são apagados', () => {
-    const t0 = Date.parse('2026-11-22T12:00:00Z');
-    startDemo(t0);
-    localStorage.setItem('dajogo:demo-db', '{}');
-    expect(getDemo(t0 + 31 * DAY)).toBeNull();
-    expect(localStorage.getItem('dajogo:demo-db')).toBeNull();
+  it('não vence com o tempo: só some quando a pessoa apaga', () => {
+    startDemo(Date.parse('2025-01-01T00:00:00Z'));
+    expect(getDemo()?.active).toBe(true);
   });
 
   it('confere a senha pela impressão digital; sem senha configurada, fica fechada', async () => {

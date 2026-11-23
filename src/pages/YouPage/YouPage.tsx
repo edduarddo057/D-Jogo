@@ -15,7 +15,7 @@ import { useMyGroups } from '@/features/groups';
 import { gameState, useMyMatches, type MatchSummary } from '@/features/matches';
 import { useMyPayments, type Payment } from '@/features/payments';
 import { ProfileForm, positionLabels, useMe, useMyStats, useSports } from '@/features/profile';
-import { DEMO_DAYS, demoConfigured, enterDemo, exitDemoToApp, isDemoActive } from '@/lib/demo';
+import { demoConfigured, enterDemo, exitDemoToApp, isDemoActive } from '@/lib/demo';
 import { formatDay, formatMoneyShort, formatWhen, monthName } from '@/lib/format';
 import { APP_BUILD, APP_BUILT_AT, APP_VERSION } from '@/lib/config';
 import { toast, usePwaStore } from '@/stores';
@@ -242,7 +242,7 @@ function DemoRow() {
       <ListItem
         leading={<ArrowLeft size={22} aria-hidden="true" />}
         title="Voltar ao app"
-        meta="Sai da demonstração; ela fica salva neste aparelho"
+        meta="Sai da demonstração; ela fica salva na sua conta"
         onClick={exitDemoToApp}
       />
     );
@@ -262,7 +262,8 @@ function DemoRow() {
         tone="primary"
         consequences={[
           'Abre uma turma de exemplo, com jogadores e um jogo hoje, para testar tudo.',
-          `Seus dados reais não mudam: a demonstração fica só neste aparelho, por ${DEMO_DAYS} dias.`,
+          'Seus dados reais não mudam: a demonstração fica separada, salva na sua conta, até você apagar.',
+          'Em outro celular com a mesma conta, ela continua de onde parou.',
           'Para voltar, toque em “Voltar ao app” na faixa do topo.',
         ]}
         actionLabel="Abrir a demonstração"

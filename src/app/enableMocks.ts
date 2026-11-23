@@ -1,12 +1,13 @@
 import { isDemoActive } from '@/lib/demo';
 
 /**
- * Liga o MSW no navegador quando VITE_API_MOCK=true (dev e homologação) ou no modo demonstração (/demo).
+ * Liga o MSW no navegador quando VITE_API_MOCK=true (dev e testes). A demonstração usa a API de
+ * verdade (a demo da conta); só com os mocks ligados ela roda no aparelho (src/mocks/demo).
  * Importado de forma dinâmica: fora desses casos, nada disso é baixado.
  * Com os mocks ligados, o service worker do PWA não é registrado (os dois disputariam o escopo "/").
  */
 export const demoMode = isDemoActive();
-export const mocksEnabled = import.meta.env.VITE_API_MOCK === 'true' || demoMode;
+export const mocksEnabled = import.meta.env.VITE_API_MOCK === 'true';
 
 export async function enableMocksIfNeeded(): Promise<void> {
   if (!mocksEnabled) return;

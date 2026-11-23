@@ -102,6 +102,7 @@ Registro das decisões já tomadas. Toda mudança de decisão entra aqui com dat
 | U23 | Fundamentos por modalidade (vôlei: saque, recepção, ataque, levantamento e passe; as outras ainda sem): nota de 1 a 10 por membro, dada pelo organizador e só visível para ele (RN-17a). O nível geral (1 a 5) continua; sem ele, vale a média das notas ÷ 2. No sorteio, "Equilibrar por nível" escolhe entre **Nível geral** e **Fundamentos** (RN-103a): por fundamentos, a soma de cada um fica parecida entre os times, mantendo gênero e posições. O algoritmo faz 30 tentativas e fica com a mais parelha (83% no ótimo em 600 grupos de teste). Contrato: `Sport.skills`, `Member.skills`, `LivePlayer.skills`, `DrawCriteria.levelBy`. | 22/11/2026 |
 | U24 | Slogan novo: **"Todo esporte fica melhor quando Dá Jogo"** (substitui M4, "Junta a galera. Dá jogo."). O app é para qualquer esporte, não só vôlei. | 23/11/2026 |
 | U25 | Atualização do app deixa de esperar o toque em "Atualizar": aplica sozinha ao abrir ou quando a pessoa sai do app (nunca no dia de jogo); no meio do uso, o aviso continua. Cada deploy leva a versão e o commit nos arquivos sem hash (`?v=`) e no Perfil. | 23/11/2026 |
+| U26 | Demonstração ligada à conta: é preciso estar logado; os dados ficam na API (`demo_worlds`, um documento por conta, separado dos dados reais), com as mesmas regras do app (pedidos com `X-Dajogo-Demo: 1`). Não vencem: só somem quando a pessoa apaga. Demos antigas, guardadas só no aparelho, sobem para a conta na primeira abertura. | 23/11/2026 |
 
 ## Back-end
 

@@ -2,7 +2,7 @@ import { http } from 'msw';
 import { allNotificationsOn, db, findGroup, newId, nowIso, type DbUser, type Gender } from '../db';
 import { addConfirmed } from '../domain/attendance';
 import { isOwner, toMember } from '../serializers';
-import { api, authed, fail, json, problem } from '../utils';
+import { api, authed, fail, json, noContent, problem } from '../utils';
 
 /**
  * Só do modo demonstração (não existe na API real): o organizador adiciona uma pessoa só pelo nome,
@@ -66,5 +66,19 @@ export const demoHandlers = [
       }
       return json({ member: toMember(membership, owner.id), matchId: match?.id ?? null }, 201);
     }),
+  ),
+
+  // A demo da conta (na API real fica em demo_worlds). Nos mocks, sempre "existe" e apagar recomeça.
+  http.get(
+    api('/demo'),
+    authed(() => json({ exists: true, createdAt: null, updatedAt: null })),
+  ),
+  http.put(
+    api('/demo'),
+    authed(() => noContent()),
+  ),
+  http.delete(
+    api('/demo'),
+    authed(() => noContent()),
   ),
 ];
