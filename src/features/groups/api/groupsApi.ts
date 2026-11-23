@@ -36,3 +36,15 @@ export async function transferGroup(groupId: string, memberId: string): Promise<
 export async function archiveGroup(groupId: string): Promise<void> {
   await http.delete(`/groups/${encodeURIComponent(groupId)}`);
 }
+
+/** Foto da turma (só o dono). Mande já reduzida (squarePhoto). */
+export async function uploadGroupPhoto(groupId: string, file: File): Promise<{ photoUrl: string }> {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await http.put<{ photoUrl: string }>(`/groups/${groupId}/photo`, form);
+  return data;
+}
+
+export async function deleteGroupPhoto(groupId: string): Promise<void> {
+  await http.delete(`/groups/${groupId}/photo`);
+}

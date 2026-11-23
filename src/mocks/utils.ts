@@ -68,3 +68,15 @@ export const noContent = () => new HttpResponse(null, { status: 204 });
 export const fail = (code: ProblemCode, rule?: string): never => {
   throw new RuleError(code, rule);
 };
+
+/** Foto pequena enviada como multipart → data URL; null se não for imagem ou passar de 300 KB. */
+export async function smallImageDataUrl(request: Request): Promise<string | null> {
+  const form = await request.formData().catch(() => null);
+  const file = form?.get('file');
+  if (!(file instanceof File) || !/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > MAX_PHOTO_BYTES) return null;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = '';
+  bytes.forEach((b) => (binary += String.fromCharCode(b)));
+  return `data:${file.type};base64,${btoa(binary)}`;
+}
+export const MAX_PHOTO_BYTES = 300 * 1024;

@@ -13,7 +13,7 @@ import {
 import { releaseSpot } from '../domain/attendance';
 import { isOwner, toGroup, toMember } from '../serializers';
 import { SPORTS } from './sports';
-import { api, authed, fail, json, noContent, problem } from '../utils';
+import { api, authed, fail, json, noContent, problem, smallImageDataUrl } from '../utils';
 
 const groupOrFail = (groupId: string, userId: string) => {
   const g = findGroup(groupId);
@@ -76,6 +76,7 @@ export const groupHandlers = [
         timezone: body.timezone ?? 'America/Sao_Paulo',
         rules: { ...defaultRules(), ...(body.rules ?? {}) },
         archivedAt: null,
+        photoUrl: null,
       };
       db.groups.push(group);
       db.memberships.push({
@@ -258,6 +259,28 @@ export const groupHandlers = [
       if (!mb || mb.userId === user.id) return problem(404, 'NOT_FOUND');
       g.ownerId = mb.userId;
       return json(toGroup(g, user.id));
+    }),
+  ),
+
+  // ── Foto da turma: o app já manda reduzida (256×256); aqui só confere tipo e tamanho
+  http.put(
+    api('/groups/:groupId/photo'),
+    authed(async ({ params, request }, user) => {
+      const g = ownerOrFail(String(params.groupId), user.id);
+      const photoUrl = await smallImageDataUrl(request);
+      if (!photoUrl)
+        return problem(400, 'VALIDATION_ERROR', { fields: { file: 'Envie uma foto JPEG, PNG ou WebP de até 300 KB' } });
+      g.photoUrl = photoUrl;
+      return json({ photoUrl });
+    }),
+  ),
+
+  http.delete(
+    api('/groups/:groupId/photo'),
+    authed(({ params }, user) => {
+      const g = ownerOrFail(String(params.groupId), user.id);
+      g.photoUrl = null;
+      return noContent();
     }),
   ),
 ];

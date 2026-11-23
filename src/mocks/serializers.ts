@@ -263,6 +263,7 @@ export function toGroupSummary(groupId: string, userId: string): Schema<'GroupSu
   return {
     id: group.id,
     name: group.name,
+    photoUrl: group.photoUrl ?? null,
     sportId: group.sportId,
     memberCount: activeMembers(groupId).length,
     defaultCapacity: group.defaultCapacity,
@@ -281,6 +282,7 @@ export function toGroup(g: DbGroup, userId: string): Schema<'Group'> | null {
   return {
     id: g.id,
     name: g.name,
+    photoUrl: g.photoUrl ?? null,
     sportId: g.sportId,
     owner: summaryOf(g.ownerId),
     location: g.location,

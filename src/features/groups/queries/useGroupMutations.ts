@@ -1,9 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { squarePhoto } from '@/lib/image';
 import {
   archiveGroup,
   createGroup,
+  deleteGroupPhoto,
   transferGroup,
   updateGroup,
+  uploadGroupPhoto,
+  type Group,
   type GroupInput,
   type GroupPatch,
 } from '../api/groupsApi';
@@ -53,4 +57,24 @@ export function useArchiveGroup(groupId: string) {
       void queryClient.invalidateQueries({ queryKey: ['matches'] });
     },
   });
+}
+
+/** Trocar ou tirar a foto da turma: reduz no aparelho, envia e atualiza turma e listas. */
+export function useGroupPhoto(groupId: string) {
+  const queryClient = useQueryClient();
+  const refresh = (photoUrl: string | null) => {
+    queryClient.setQueryData<Group>(groupKeys.detail(groupId), (g) => (g ? { ...g, photoUrl } : g));
+    void queryClient.invalidateQueries({ queryKey: groupKeys.all });
+  };
+  const upload = useMutation({
+    mutationFn: async (file: File) => uploadGroupPhoto(groupId, await squarePhoto(file)),
+    meta: { silent: true },
+    onSuccess: ({ photoUrl }) => refresh(photoUrl),
+  });
+  const remove = useMutation({
+    mutationFn: () => deleteGroupPhoto(groupId),
+    meta: { silent: true },
+    onSuccess: () => refresh(null),
+  });
+  return { upload, remove };
 }

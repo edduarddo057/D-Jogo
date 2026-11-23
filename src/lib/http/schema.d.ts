@@ -193,7 +193,7 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Envia a foto de perfil (JPEG/PNG/WebP, até 5 MB; o servidor recorta em quadrado) */
+        /** Envia a foto de perfil (JPEG/PNG/WebP; o app reduz para 256×256 antes de enviar; até 300 KB) */
         put: operations["uploadPhoto"];
         post?: never;
         /** Remove a foto */
@@ -444,6 +444,26 @@ export interface paths {
         head?: never;
         /** Edita dados da turma (dono) */
         patch: operations["updateGroup"];
+        trace?: never;
+    };
+    "/groups/{groupId}/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: components["parameters"]["GroupId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Envia a foto da turma (só o dono). O app reduz para 256×256 antes de enviar; até 300 KB. */
+        put: operations["uploadGroupPhoto"];
+        post?: never;
+        /** Remove a foto da turma (só o dono) */
+        delete: operations["deleteGroupPhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/groups/{groupId}/transfer": {
@@ -1420,6 +1440,8 @@ export interface components {
         GroupSummary: {
             id: string;
             name: string;
+            /** @description Foto da turma (imagem pequena */
+            photoUrl?: string | null;
             sportId: string;
             memberCount: number;
             defaultCapacity: number;
@@ -1452,6 +1474,8 @@ export interface components {
         Group: {
             id: string;
             name: string;
+            /** @description Foto da turma (imagem pequena */
+            photoUrl?: string | null;
             sportId: string;
             owner: components["schemas"]["UserSummary"];
             location: components["schemas"]["Location"];
@@ -1534,6 +1558,7 @@ export interface components {
             invitedBy: string;
             group: {
                 name: string;
+                photoUrl?: string | null;
                 sportId: string;
                 location: components["schemas"]["Location"];
                 memberCount: number;
@@ -2856,6 +2881,60 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    uploadGroupPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: components["parameters"]["GroupId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        photoUrl: string;
+                    };
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    deleteGroupPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                groupId: components["parameters"]["GroupId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removida */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             403: components["responses"]["Forbidden"];
         };
     };

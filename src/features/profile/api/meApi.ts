@@ -1,3 +1,4 @@
+import { squarePhoto } from '@/lib/image';
 import { http, type Schema } from '@/lib/http';
 
 export type Me = Schema<'Me'>;
@@ -99,7 +100,7 @@ export async function confirmPhoneChange(challengeId: string, code: string): Pro
 
 export async function uploadPhoto(file: File): Promise<{ photoUrl: string }> {
   const form = new FormData();
-  form.append('file', file);
+  form.append('file', await squarePhoto(file)); // 256×256: fotos de câmera têm vários MB
   const { data } = await http.put<{ photoUrl: string }>('/me/photo', form);
   return data;
 }

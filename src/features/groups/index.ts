@@ -4,7 +4,13 @@ export { listMembers, addMember, updateMember, removeMember, leaveGroup, updateR
 export type { Member, MembershipType, GroupRules, GroupRulesPatch } from './api/membersApi';
 export { groupKeys } from './queries/groupKeys';
 export { useMyGroups, useGroup, useOrganizes, can } from './queries/useGroups';
-export { useCreateGroup, useUpdateGroup, useTransferGroup, useArchiveGroup } from './queries/useGroupMutations';
+export {
+  useCreateGroup,
+  useUpdateGroup,
+  useTransferGroup,
+  useArchiveGroup,
+  useGroupPhoto,
+} from './queries/useGroupMutations';
 export {
   memberKeys,
   useMembers,

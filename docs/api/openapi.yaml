@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Dá Jogo API
-  version: 0.6.0
+  version: 0.7.0
   summary: Contrato do Dá Jogo 2.0 (turmas, jogos, presença, fila, pagamentos, caixa, avisos e dia de jogo).
   description: |
     Contrato independente de tecnologia. Regras de negócio em `docs/backend/business-rules.md` (citadas como RN-xx);
@@ -293,7 +293,7 @@ paths:
     put:
       tags: [Me]
       operationId: uploadPhoto
-      summary: Envia a foto de perfil (JPEG/PNG/WebP, até 5 MB; o servidor recorta em quadrado)
+      summary: Envia a foto de perfil (JPEG/PNG/WebP; o app reduz para 256×256 antes de enviar; até 300 KB)
       requestBody:
         required: true
         content:
@@ -603,6 +603,42 @@ paths:
       summary: Arquiva a turma (RN-11)
       responses:
         '204': { description: Arquivada }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /groups/{groupId}/photo:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    put:
+      tags: [Groups]
+      operationId: uploadGroupPhoto
+      summary: Envia a foto da turma (só o dono). O app reduz para 256×256 antes de enviar; até 300 KB.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [photoUrl]
+                properties:
+                  photoUrl: { type: string }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    delete:
+      tags: [Groups]
+      operationId: deleteGroupPhoto
+      summary: Remove a foto da turma (só o dono)
+      responses:
+        '204': { description: Removida }
         '403': { $ref: '#/components/responses/Forbidden' }
 
   /groups/{groupId}/transfer:
@@ -1947,6 +1983,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
+        photoUrl: { type: [string, 'null'], description: Foto da turma (imagem pequena, 256×256); null = iniciais do nome. }
         sportId: { type: string }
         memberCount: { type: integer }
         defaultCapacity: { type: integer }
@@ -1985,6 +2022,7 @@ components:
       properties:
         id: { type: string }
         name: { type: string }
+        photoUrl: { type: [string, 'null'], description: Foto da turma (imagem pequena, 256×256); null = iniciais do nome. }
         sportId: { type: string }
         owner: { $ref: '#/components/schemas/UserSummary' }
         location: { $ref: '#/components/schemas/Location' }
@@ -2098,6 +2136,7 @@ components:
           required: [name, sportId, location, memberCount]
           properties:
             name: { type: string }
+            photoUrl: { type: [string, 'null'] }
             sportId: { type: string }
             location: { $ref: '#/components/schemas/Location' }
             memberCount: { type: integer }

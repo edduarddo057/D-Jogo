@@ -62,7 +62,7 @@ export function OrganizePage() {
               {owned.map((g) => (
                 <ListItem
                   key={g.id}
-                  leading={<Avatar name={g.name} id={g.id} decorative />}
+                  leading={<Avatar name={g.name} id={g.id} src={g.photoUrl} decorative />}
                   title={g.name}
                   meta={g.nextMatch ? `Próximo jogo: ${formatDay(g.nextMatch.startsAt)}` : 'Nenhum jogo marcado'}
                   to={`/organizar/${g.id}/presenca`}

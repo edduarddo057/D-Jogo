@@ -74,7 +74,7 @@ export function InvitePage() {
   return (
     <>
       <div className={styles.hero}>
-        <Avatar name={p.group.name} id={p.group.name} size="lg" />
+        <Avatar name={p.group.name} id={p.group.name} src={p.group.photoUrl} size="lg" />
         <p className={styles.muted}>{inviter} te convidou para</p>
         <h1 className={styles.title}>{p.group.name}</h1>
         <p className={styles.muted}>

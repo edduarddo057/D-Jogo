@@ -13,7 +13,7 @@ import {
   toPayment,
 } from '../serializers';
 import { MOCK_OTP_CODE } from './auth';
-import { api, authed, json, problem } from '../utils';
+import { api, authed, json, problem, smallImageDataUrl } from '../utils';
 import { acceptInviteFor } from './invites';
 
 const NICK = /^[a-z0-9._]{3,20}$/;
@@ -139,14 +139,10 @@ export const meHandlers = [
   http.put(
     api('/me/photo'),
     authed(async ({ request }, user) => {
-      const form = await request.formData();
-      const file = form.get('file');
-      if (!(file instanceof File) || !/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024)
-        return problem(400, 'VALIDATION_ERROR', { fields: { file: 'Envie JPEG, PNG ou WebP de até 5 MB' } });
-      const bytes = new Uint8Array(await file.arrayBuffer());
-      let binary = '';
-      bytes.forEach((b) => (binary += String.fromCharCode(b)));
-      user.photoUrl = `data:${file.type};base64,${btoa(binary)}`;
+      const photoUrl = await smallImageDataUrl(request);
+      if (!photoUrl)
+        return problem(400, 'VALIDATION_ERROR', { fields: { file: 'Envie uma foto JPEG, PNG ou WebP de até 300 KB' } });
+      user.photoUrl = photoUrl;
       return json({ photoUrl: user.photoUrl });
     }),
   ),

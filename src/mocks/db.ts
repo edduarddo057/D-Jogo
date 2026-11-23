@@ -56,6 +56,8 @@ export interface DbGroup {
   timezone: string;
   rules: DbGroupRules;
   archivedAt: string | null;
+  /** Foto da turma (data URL pequena, 256×256), escolhida por quem organiza. */
+  photoUrl: string | null;
 }
 export interface DbMembership {
   id: string;
@@ -350,6 +352,7 @@ function seed() {
       monthlyResponseDeadline: { daysBefore: 1, time: '09:00' },
     },
     archivedAt: null,
+    photoUrl: null,
   };
   const quarta: DbGroup = {
     id: 'g_quarta',
@@ -366,6 +369,7 @@ function seed() {
     timezone: 'America/Sao_Paulo',
     rules: defaultRules(),
     archivedAt: null,
+    photoUrl: null,
   };
   const groups = [sabado, quarta];
 

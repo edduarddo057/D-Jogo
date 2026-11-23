@@ -77,6 +77,7 @@ export function createDemoDb(now = new Date()): Db {
     timezone: 'America/Sao_Paulo',
     rules: defaultRules(),
     archivedAt: null,
+    photoUrl: null,
   };
 
   const memberships: DbMembership[] = people.map((p, i) => ({

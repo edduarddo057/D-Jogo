@@ -1,5 +1,5 @@
-import { CalendarDays, CircleDollarSign, MapPin, Share2 } from 'lucide-react';
-import { useState } from 'react';
+import { Camera, CalendarDays, CircleDollarSign, MapPin, Share2 } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { Avatar, AvatarStack } from '@/components/Avatar';
 import { Button } from '@/components/Button';
@@ -10,11 +10,20 @@ import { Section } from '@/components/Section';
 import { Sheet, useSheetParam } from '@/components/Sheet';
 import { SkeletonList } from '@/components/Skeleton';
 import { GameCard } from '@/features/attendance';
-import { MEMBERSHIP_LABEL, ruleLines, useGroup, useLeaveGroup, useMembers } from '@/features/groups';
+import {
+  MEMBERSHIP_LABEL,
+  ruleLines,
+  useGroup,
+  useGroupPhoto,
+  useLeaveGroup,
+  useMembers,
+  type Group,
+} from '@/features/groups';
 import { useGroupMatches } from '@/features/matches';
 import { useSports } from '@/features/profile';
 import { mapsLink } from '@/lib/calendar';
 import { formatMoneyShort, formatSchedule } from '@/lib/format';
+import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import styles from './GroupPage.module.css';
 import { InviteSheet } from '../shared/organizer/InviteSheet';
@@ -66,7 +75,7 @@ export function GroupPage() {
         }
       />
       <div className={styles.hero}>
-        <Avatar name={g.name} id={g.id} size="lg" />
+        {owner ? <GroupPhoto group={g} /> : <Avatar name={g.name} id={g.id} src={g.photoUrl} size="lg" />}
         <h1 className={styles.title}>{g.name}</h1>
         <p className={styles.muted}>{subtitle}</p>
       </div>
@@ -173,5 +182,69 @@ export function GroupPage() {
         </Button>
       </Sheet>
     </>
+  );
+}
+
+/**
+ * Foto da turma para quem organiza: o botão de câmera abre a galeria (sem foto) ou uma folha com
+ * "Escolher outra foto" e "Remover foto". A foto é reduzida no aparelho antes de enviar.
+ */
+function GroupPhoto({ group }: { group: Group }) {
+  const { upload, remove } = useGroupPhoto(group.id);
+  const input = useRef<HTMLInputElement>(null);
+  const sheet = useSheetParam('foto-da-turma');
+  const busy = upload.isPending || remove.isPending;
+  const fail = (e: unknown) =>
+    toast(isApiError(e) ? messageFor(e.code) : 'Não deu para trocar a foto. Tente outra imagem.', { tone: 'error' });
+
+  const pick = (file: File | undefined) => {
+    if (input.current) input.current.value = '';
+    if (!file) return;
+    sheet.close();
+    upload.mutate(file, { onSuccess: () => toast('Foto da turma trocada.', { tone: 'success' }), onError: fail });
+  };
+
+  return (
+    <div className={styles.photo}>
+      <Avatar name={group.name} id={group.id} src={group.photoUrl} size="lg" />
+      <button
+        type="button"
+        className={styles.photoEdit}
+        aria-label={group.photoUrl ? 'Trocar a foto da turma' : 'Adicionar foto da turma'}
+        aria-busy={busy}
+        disabled={busy}
+        onClick={() => (group.photoUrl ? sheet.open() : input.current?.click())}
+      >
+        <Camera size={18} aria-hidden="true" />
+      </button>
+      <input
+        ref={input}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="visually-hidden"
+        tabIndex={-1}
+        aria-label="Foto da turma"
+        onChange={(e) => pick(e.target.files?.[0])}
+      />
+      <Sheet open={sheet.isOpen} onClose={() => sheet.close()} title="Foto da turma">
+        <List>
+          <ListItem title="Escolher outra foto" onClick={() => input.current?.click()} />
+          <ListItem
+            tone="danger"
+            title="Remover foto"
+            meta="A turma volta a mostrar as iniciais do nome"
+            onClick={() =>
+              remove.mutate(undefined, {
+                onSuccess: () => {
+                  sheet.close();
+                  toast('Foto removida.');
+                },
+                onError: fail,
+              })
+            }
+          />
+        </List>
+      </Sheet>
+    </div>
   );
 }

@@ -9,6 +9,35 @@
   margin-bottom: var(--space-2);
 }
 
+.photo {
+  position: relative;
+}
+
+.photoEdit {
+  position: absolute;
+  right: calc(var(--space-1) * -1);
+  bottom: calc(var(--space-1) * -1);
+  display: grid;
+  place-items: center;
+  width: 4.4rem;
+  height: 4.4rem;
+  border: 0.3rem solid var(--color-bg);
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  cursor: pointer;
+}
+
+.photoEdit:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.photoEdit:focus-visible {
+  outline: 0.3rem solid var(--color-primary);
+  outline-offset: 0.2rem;
+}
+
 .title {
   font: italic var(--text-display-weight) var(--text-display-size) / var(--text-display-line) var(--font-display);
   letter-spacing: var(--text-display-tracking);

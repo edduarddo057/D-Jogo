@@ -44,7 +44,7 @@ export function GroupsPage() {
             {groups.data.map((g) => (
               <ListItem
                 key={g.id}
-                leading={<Avatar name={g.name} id={g.id} decorative />}
+                leading={<Avatar name={g.name} id={g.id} src={g.photoUrl} decorative />}
                 title={g.name}
                 meta={[g.schedules?.length ? formatScheduleShort(g.schedules) : null, g.location?.name]
                   .filter(Boolean)

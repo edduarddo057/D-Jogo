@@ -105,6 +105,7 @@ export const inviteHandlers = [
       invitedBy: owner?.name ?? '',
       group: {
         name: group.name,
+        photoUrl: group.photoUrl ?? null,
         sportId: group.sportId,
         location: group.location,
         memberCount: activeMembers(group.id).length,
