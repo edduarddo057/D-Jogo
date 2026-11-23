@@ -1,6 +1,7 @@
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router';
 import { isApiError, messageFor } from '@/lib/http';
 import styles from './RouteStates.module.css';
+import { appUrl } from '@/lib/config';
 
 /** Carregando uma rota inteira (antes dos Skeletons por tela, que chegam com o design system). */
 export function RouteLoading() {
@@ -19,7 +20,7 @@ export function Splash() {
     // não pisca nem reinicia a animação
     <div className="splash splash-static" role="status" aria-label="Abrindo o Dá Jogo">
       <div className="splash-mark">
-        <img className="splash-logo" src="/brand/symbol.png" alt="" width="914" height="656" />
+        <img className="splash-logo" src={appUrl('brand/symbol.png')} alt="" width="914" height="656" />
       </div>
       <p className="splash-word" aria-hidden="true">
         Dá <span>Jogo</span>

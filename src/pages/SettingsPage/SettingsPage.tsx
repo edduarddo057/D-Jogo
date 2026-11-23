@@ -31,6 +31,7 @@ import { isApiError, messageFor } from '@/lib/http';
 import { isDemoActive, leaveDemo } from '@/lib/demo';
 import { toast, useThemeStore, type ThemePreference } from '@/stores';
 import styles from './SettingsPage.module.css';
+import { appUrl } from '@/lib/config';
 
 const SWITCHES: Array<{ key: keyof NotificationSettings; title: string; detail: string }> = [
   { key: 'lists', title: 'Lista aberta e lembretes', detail: 'Quando abrir um jogo e se você não respondeu' },
@@ -120,7 +121,7 @@ export function SettingsPage() {
               // na demonstração, "Sair" sai da demo (sem apagar nada) e volta para /demo
               if (isDemoActive()) {
                 leaveDemo();
-                window.location.assign('/demo');
+                window.location.assign(appUrl('demo'));
                 return;
               }
               void signOut(queryClient).then(() => navigate('/entrar', { replace: true }));

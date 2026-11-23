@@ -19,6 +19,7 @@ import {
 } from '@/lib/demo';
 import { formatDay } from '@/lib/format';
 import styles from './DemoPage.module.css';
+import { appUrl } from '@/lib/config';
 
 /**
  * /demo: entrada do modo demonstração, com senha. Sem cadastro: entra como organizador de uma turma
@@ -47,7 +48,7 @@ export function DemoPage() {
       <div className={styles.page}>
         <BrandLogo />
         <PageTitle title="Você já está na demonstração" />
-        <Button block onClick={() => window.location.assign('/')}>
+        <Button block onClick={() => window.location.assign(appUrl(''))}>
           Ir para a demonstração
         </Button>
       </div>
@@ -65,7 +66,7 @@ export function DemoPage() {
       return setError('Senha incorreta.');
     }
     startDemo();
-    window.location.assign('/'); // recarrega: o app abre já na demo, com a turma pronta
+    window.location.assign(appUrl('')); // recarrega: o app abre já na demo, com a turma pronta
   };
 
   return (

@@ -10,6 +10,16 @@ O front é um site estático (pasta `dist/`). Qualquer hospedagem de sites está
 
 Comando de build: `pnpm build`. Pasta publicada: `dist`. Node 22.
 
+## GitHub Pages (publicação atual)
+
+O app está em **https://edduarddo057.github.io/D-Jogo/**, publicado pelo workflow `.github/workflows/deploy-pages.yml` a cada push na `develop` (ou manualmente, em Actions › Deploy GitHub Pages › Run workflow).
+
+- **Subpasta `/D-Jogo/`:** o build usa `base: '/D-Jogo/'` (troque com `BASE_PATH`, ex.: `BASE_PATH=/ pnpm build` para hospedar na raiz do domínio). O roteador, o worker dos mocks, o manifesto e o cache do PWA seguem a base; no código, imagens de `public/` e recarregamentos usam `appUrl()` (`src/lib/config.ts`).
+- **Rotas:** o Pages não reescreve endereços; o workflow copia `index.html` para `404.html` e o React Router abre a rota certa.
+- **Sem back-end ainda:** publica com `VITE_API_MOCK=true` (dados de teste no navegador).
+- **Senha da demonstração:** `VITE_DEMO_PASSWORD_HASH` no workflow; para trocar sem editar o arquivo, crie a variável `DEMO_PASSWORD_HASH` em Settings › Secrets and variables › Actions › Variables (gere com `pnpm demo:senha "senha"`).
+- **Testar o build como no Pages:** `pnpm build && pnpm preview` e abra `http://localhost:4173/D-Jogo/`.
+
 ## Ambientes
 
 | Ambiente | Para quê | Variáveis |

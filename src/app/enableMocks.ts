@@ -17,5 +17,13 @@ export async function enableMocksIfNeeded(): Promise<void> {
     startDemoDb(worker);
   }
   // Fontes, assets e o próprio app passam direto. Chamadas à API sem handler aparecem na aba Network.
-  await worker.start({ onUnhandledFrame: 'bypass', quiet: true });
+  // Worker e escopo seguem a base do build (ex.: /D-Jogo/ no GitHub Pages).
+  await worker.start({
+    onUnhandledFrame: 'bypass',
+    quiet: true,
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+      options: { scope: import.meta.env.BASE_URL },
+    },
+  });
 }

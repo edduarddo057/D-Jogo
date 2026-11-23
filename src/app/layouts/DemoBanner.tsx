@@ -5,11 +5,12 @@ import { formatDay } from '@/lib/format';
 import { getDemo, leaveDemo } from '@/lib/demo';
 import { demoMode } from '../enableMocks';
 import styles from './DemoBanner.module.css';
+import { appUrl } from '@/lib/config';
 
 /** Sai da demonstração sem apagar nada e volta para /demo (o app recarrega sem os mocks). */
 function exitDemo() {
   leaveDemo();
-  window.location.assign('/demo');
+  window.location.assign(appUrl('demo'));
 }
 
 /**
