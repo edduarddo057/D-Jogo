@@ -1,6 +1,6 @@
 # Dá Jogo
 
-**Junta a galera. Dá jogo.** O design system do app que organiza turmas e partidas esportivas, começando pelo vôlei.
+**Todo esporte fica melhor quando Dá Jogo.** O design system do app que organiza turmas e partidas de qualquer esporte.
 
 O Dá Jogo é um PWA pensado primeiro para o celular, na mão de quem está chegando na quadra, mas funciona por completo no desktop, onde o organizador costuma cuidar de presenças e financeiro. Tem tema claro e escuro desde o MVP.
 
@@ -127,7 +127,7 @@ O app usa `100dvh` (não `100vh`) e respeita `env(safe-area-inset-*)` quando ins
 - Não inclinar, contornar, aplicar degradê nem trocar a cor da haste por cores de estado.
 - Os arquivos fonte (SVG do símbolo, logotipo e ícones 192/512/maskable) ficam em `public/brand/` e são gerados na etapa 6 do roadmap. Referência visual: canvas "Nome e escudo do app", página "Dá Jogo".
 
-**Slogan:** "Junta a galera. Dá jogo."
+**Slogan:** "Todo esporte fica melhor quando Dá Jogo." (antes: "Junta a galera. Dá jogo.")
 
 ## Acessibilidade
 

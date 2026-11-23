@@ -20,6 +20,11 @@
   letter-spacing: var(--text-display-tracking);
 }
 
+.brand {
+  color: var(--color-accent-text);
+  white-space: nowrap;
+}
+
 .lead {
   margin: 0;
   color: var(--color-text-muted);

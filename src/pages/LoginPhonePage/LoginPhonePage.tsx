@@ -32,9 +32,15 @@ export function LoginPhonePage() {
           <BrandLogo size="lg" />
           <div className={styles.hero}>
             <h1 className={styles.title}>
-              {invite ? 'Falta pouco para entrar na turma.' : 'Seu jogo organizado, do convite ao placar.'}
+              {invite ? (
+                'Falta pouco para entrar na turma.'
+              ) : (
+                <>
+                  Todo esporte fica melhor quando <span className={styles.brand}>Dá{'\u00a0'}Jogo</span>.
+                </>
+              )}
             </h1>
-            <p className={styles.lead}>Para qualquer esporte: vôlei, futebol, beach tennis, basquete…</p>
+            <p className={styles.lead}>Lista, Pix e times sorteados num lugar só, do convite ao placar.</p>
           </div>
           <ul className={styles.highlights}>
             {HIGHLIGHTS.map(({ icon: Icon, title, detail }) => (

@@ -1,6 +1,6 @@
 # Dá Jogo
 
-PWA para organizar turmas e partidas esportivas: presença, vagas, lista de espera, pagamentos, caixa e sorteio de times. Começa pelo vôlei. *Junta a galera. Dá jogo.*
+PWA para organizar turmas e partidas esportivas: presença, vagas, lista de espera, pagamentos, caixa e sorteio de times. Para qualquer esporte. *Todo esporte fica melhor quando Dá Jogo.*
 
 ## Requisitos
 

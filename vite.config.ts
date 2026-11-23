@@ -27,7 +27,7 @@ export default defineConfig(({ command, isPreview }) => {
           id: base,
           name: 'Dá Jogo',
           short_name: 'Dá Jogo',
-          description: 'Junta a galera, organiza a turma e fecha o time.',
+          description: 'Todo esporte fica melhor quando Dá Jogo. Lista, Pix e times sorteados num lugar só.',
           lang: 'pt-BR',
           dir: 'ltr',
           start_url: base,
