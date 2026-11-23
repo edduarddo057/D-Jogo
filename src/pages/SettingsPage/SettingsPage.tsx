@@ -31,7 +31,7 @@ import { isApiError, messageFor } from '@/lib/http';
 import { isDemoActive, leaveDemo } from '@/lib/demo';
 import { toast, useThemeStore, type ThemePreference } from '@/stores';
 import styles from './SettingsPage.module.css';
-import { appUrl } from '@/lib/config';
+import { appUrl, PHONE_LOGIN } from '@/lib/config';
 
 const SWITCHES: Array<{ key: keyof NotificationSettings; title: string; detail: string }> = [
   { key: 'lists', title: 'Lista aberta e lembretes', detail: 'Quando abrir um jogo e se você não respondeu' },
@@ -98,11 +98,14 @@ export function SettingsPage() {
 
       <Section title="Conta">
         <List>
-          <ListItem
-            title="Trocar número"
-            meta={me.data ? formatE164Brazil(me.data.phone) : undefined}
-            onClick={() => phoneSheet.open()}
-          />
+          {/* sem login pelo celular, o número de contato muda no perfil */}
+          {PHONE_LOGIN && (
+            <ListItem
+              title="Trocar número"
+              meta={me.data?.phone ? formatE164Brazil(me.data.phone) : undefined}
+              onClick={() => phoneSheet.open()}
+            />
+          )}
           <ListItem title="Termos e privacidade" meta={acceptedOn(me.data?.termsAcceptedAt)} to="/termos" />
           <ListItem
             title="Baixar meus dados"

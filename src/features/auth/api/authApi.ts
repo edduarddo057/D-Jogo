@@ -14,6 +14,12 @@ export async function verifyOtp(challengeId: string, code: string): Promise<Auth
   return data;
 }
 
+/** Entrar com Google: o `credential` é o ID token que o botão do Google entrega. */
+export async function signInWithGoogle(credential: string): Promise<AuthSession> {
+  const { data } = await http.post<AuthSession>('/auth/google', { credential }, { skipAuthRefresh: true });
+  return data;
+}
+
 /** O token de renovação vai no cookie HttpOnly; o corpo fica vazio. */
 export async function refreshSession(): Promise<AuthSession> {
   const { data } = await http.post<AuthSession>('/auth/refresh', {}, { skipAuthRefresh: true });

@@ -51,8 +51,14 @@ export function useUpdateProfile() {
       nickname: string;
       gender: Gender | null;
       sportProfile: SportProfileInput;
+      phone?: string;
     }) => {
-      const me = await updateMe({ name: v.name, nickname: v.nickname, gender: v.gender });
+      const me = await updateMe({
+        name: v.name,
+        nickname: v.nickname,
+        gender: v.gender,
+        ...(v.phone ? { phone: v.phone } : {}),
+      });
       const sportProfile = await upsertSportProfile(v.sportProfile);
       return { ...me, sportProfiles: [sportProfile] };
     },

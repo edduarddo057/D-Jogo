@@ -18,7 +18,7 @@ export function OnboardingPage() {
 
   return (
     <>
-      <NavBar back={{ to: '/entrar/codigo', label: 'Voltar' }} />
+      <NavBar back={{ to: '/entrar', label: 'Voltar' }} />
       <PageTitle title="Seu perfil" />
       {(!invite || !preview.isPending) && (
         <ProfileForm

@@ -1,0 +1,26 @@
+.google {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-block-end: var(--space-5);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+.divider {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-body-sm-size);
+}
+
+.divider::before,
+.divider::after {
+  flex: 1;
+  height: 0.1rem;
+  background: var(--color-border);
+  content: '';
+}

@@ -56,6 +56,16 @@ export const authHandlers = [
     return HttpResponse.json({ accessToken: tokenFor(user.id), expiresIn: 900, user: toMe(user) });
   }),
 
+  // Nos mocks, qualquer credencial do Google entra como a Marina.
+  http.post(api('/auth/google'), async ({ request }) => {
+    await delay(latency());
+    const { credential } = (await request.json()) as { credential?: string };
+    const user = credential ? findUser('u_marina') : undefined;
+    if (!user) return problem(401, 'UNAUTHENTICATED');
+    db.session.userId = user.id;
+    return HttpResponse.json({ accessToken: tokenFor(user.id), expiresIn: 900, user: toMe(user) });
+  }),
+
   http.post(api('/auth/refresh'), async () => {
     await delay(latency());
     const user = db.session.userId ? findUser(db.session.userId) : undefined;

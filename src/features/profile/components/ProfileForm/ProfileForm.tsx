@@ -5,7 +5,8 @@ import { Button } from '@/components/Button';
 import { Checkbox } from '@/components/Check';
 import { Chips } from '@/components/Chips';
 import { TextField } from '@/components/TextField';
-import { appUrl, TERMS_VERSION } from '@/lib/config';
+import { appUrl, PHONE_LOGIN, TERMS_VERSION } from '@/lib/config';
+import { maskBrazilianPhone, toE164Brazil } from '@/lib/format';
 import { isApiError, messageFor } from '@/lib/http';
 import { toast } from '@/stores';
 import { uploadPhoto, type Gender, type Me } from '../../api/meApi';
@@ -51,6 +52,13 @@ export function ProfileForm({
   const [gender, setGender] = useState<GenderChoice>(me?.gender ?? 'none');
   const [terms, setTerms] = useState(false);
   const [photo, setPhoto] = useState<string | null>(me?.photoUrl ?? null);
+  /**
+   * Celular de contato: obrigatório no primeiro acesso de quem entrou pelo Google; editável no
+   * perfil enquanto o login pelo celular estiver desligado (quem entra pelo celular troca o número
+   * com código, em Configurações).
+   */
+  const askPhone = mode === 'onboarding' ? !me?.phone : !PHONE_LOGIN;
+  const [phone, setPhone] = useState(me?.phone ? maskBrazilianPhone(me.phone.replace(/^\+55/, '')) : '');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
   const availability = useNicknameAvailability(nickname, me?.nickname);
@@ -79,6 +87,8 @@ export function ProfileForm({
     else if (nickTaken)
       next.nickname = suggestion ? `Esse apelido já existe. Que tal “${suggestion}”?` : 'Esse apelido já existe.';
     if (positions.length === 0) next.positions = 'Escolha ao menos uma posição.';
+    const e164 = askPhone ? toE164Brazil(phone) : null;
+    if (askPhone && !e164) next.phone = 'Digite o celular com DDD, ex.: (11) 98765-4321.';
     if (mode === 'onboarding' && !terms) next.terms = 'Para entrar, aceite os termos e a política de privacidade.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -93,11 +103,18 @@ export function ProfileForm({
           sportProfile,
           gender: g,
           acceptedTermsVersion: TERMS_VERSION,
+          ...(e164 ? { phone: e164 } : {}),
           ...(inviteCode ? { inviteCode } : {}),
         });
         onDone({ joinedGroupId: res.joinedGroupId ?? null });
       } else {
-        await update.mutateAsync({ name: name.trim(), nickname: nick.data ?? nickname, gender: g, sportProfile });
+        await update.mutateAsync({
+          name: name.trim(),
+          nickname: nick.data ?? nickname,
+          gender: g,
+          sportProfile,
+          ...(e164 && e164 !== me?.phone ? { phone: e164 } : {}),
+        });
         onDone({});
       }
     } catch (err) {
@@ -155,6 +172,21 @@ export function ProfileForm({
         }
         error={errors.nickname}
       />
+
+      {askPhone && (
+        <TextField
+          label="Celular"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel-national"
+          placeholder="(11) 98765-4321"
+          prefix="+55"
+          value={phone}
+          onChange={(e) => setPhone(maskBrazilianPhone(e.target.value))}
+          hint="Para o organizador da turma falar com você."
+          error={errors.phone}
+        />
+      )}
 
       {sport && (
         <div className={styles.group}>

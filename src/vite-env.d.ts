@@ -12,6 +12,10 @@ interface ImportMetaEnv {
   readonly VITE_DEMO_PASSWORD_HASH?: string;
   /** Modo demonstração: por quantos dias os dados ficam salvos no aparelho (padrão 30). */
   readonly VITE_DEMO_DAYS?: string;
+  /** Client ID do Google para "Entrar com Google" (vazio = sem o botão). */
+  readonly VITE_GOOGLE_CLIENT_ID?: string;
+  /** "false" esconde o login pelo celular (sem envio de código por WhatsApp/SMS). */
+  readonly VITE_PHONE_LOGIN?: string;
 }
 
 interface ImportMeta {

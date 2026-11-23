@@ -11,7 +11,13 @@ export async function getMe(): Promise<Me> {
 
 export type Gender = Schema<'Gender'>;
 
-export async function updateMe(body: { name?: string; nickname?: string; gender?: Gender | null }): Promise<Me> {
+export async function updateMe(body: {
+  name?: string;
+  nickname?: string;
+  gender?: Gender | null;
+  /** Celular de contato (conta que entra pelo Google). */
+  phone?: string;
+}): Promise<Me> {
   const { data } = await http.patch<Me>('/me', body);
   return data;
 }
@@ -22,6 +28,7 @@ export async function completeOnboarding(body: {
   sportProfile: SportProfileInput;
   gender?: Gender | null;
   acceptedTermsVersion: string;
+  phone?: string;
   inviteCode?: string;
 }): Promise<{ me: Me; joinedGroupId?: string | null }> {
   const { data } = await http.post<{ me: Me; joinedGroupId?: string | null }>('/me/onboarding', body);

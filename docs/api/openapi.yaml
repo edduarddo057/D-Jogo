@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Dá Jogo API
-  version: 0.4.0
+  version: 0.5.0
   summary: Contrato do Dá Jogo 2.0 (turmas, jogos, presença, fila, pagamentos, caixa, avisos e dia de jogo).
   description: |
     Contrato independente de tecnologia. Regras de negócio em `docs/backend/business-rules.md` (citadas como RN-xx);
@@ -89,6 +89,34 @@ paths:
         '400': { $ref: '#/components/responses/ValidationError' }
         '422': { $ref: '#/components/responses/BusinessRuleError' }
 
+  /auth/google:
+    post:
+      tags: [Auth]
+      operationId: signInWithGoogle
+      summary: Entra com a conta Google (ID token do Google Identity Services)
+      description: |
+        O app recebe o `credential` (ID token) do botão do Google e manda aqui. A API confere a
+        assinatura, o emissor e o Client ID; conta nova nasce com perfil incompleto e sem celular,
+        que é pedido no onboarding (RN-02).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [credential]
+              properties:
+                credential: { type: string, minLength: 20 }
+      responses:
+        '200':
+          description: Sessão aberta, igual ao login por código.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
   /auth/refresh:
     post:
       tags: [Auth]
@@ -134,7 +162,10 @@ paths:
     patch:
       tags: [Me]
       operationId: updateMe
-      summary: Edita nome, nickname e gênero
+      summary: Edita nome, nickname, gênero e o celular de contato
+      description: |
+        `phone` só muda por aqui em conta que entra pelo Google (celular de contato, sem código);
+        quem entra pelo celular troca o número em /me/phone/otp (RN-06).
       requestBody:
         required: true
         content:
@@ -142,6 +173,7 @@ paths:
             schema:
               type: object
               properties:
+                phone: { $ref: '#/components/schemas/Phone' }
                 name: { $ref: '#/components/schemas/PersonName' }
                 nickname: { $ref: '#/components/schemas/Nickname' }
                 gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
@@ -179,6 +211,9 @@ paths:
                 sportProfile: { $ref: '#/components/schemas/SportProfileInput' }
                 gender: { oneOf: [{ $ref: '#/components/schemas/Gender' }, { type: 'null' }] }
                 acceptedTermsVersion: { type: string, examples: ['2026-11'] }
+                phone:
+                  $ref: '#/components/schemas/Phone'
+                  description: Celular de contato; obrigatório quando a conta ainda não tem (entrou pelo Google).
                 inviteCode: { type: string, description: Convite a aceitar ao terminar (fluxo de convite sem login). }
       responses:
         '200':
@@ -1700,7 +1735,10 @@ components:
       required: [id, phone, name, nickname, profileCompleted, sportProfiles, termsVersion]
       properties:
         id: { type: string }
-        phone: { $ref: '#/components/schemas/Phone' }
+        phone:
+          description: null = conta do Google que ainda não informou o celular.
+          oneOf: [{ $ref: '#/components/schemas/Phone' }, { type: 'null' }]
+        email: { type: [string, 'null'], description: E-mail da conta Google, se houver. }
         name: { type: string }
         nickname: { type: string }
         photoUrl: { type: [string, 'null'], format: uri }

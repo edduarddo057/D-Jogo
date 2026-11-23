@@ -69,6 +69,7 @@ export function toMe(u: DbUser): Schema<'Me'> {
   return {
     id: u.id,
     phone: u.phone,
+    email: null,
     name: u.name,
     nickname: u.nickname,
     photoUrl: u.photoUrl,

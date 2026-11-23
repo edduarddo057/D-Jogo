@@ -35,6 +35,10 @@ jobs:
       # DEMO_PASSWORD_HASH em Settings › Secrets and variables › Actions › Variables.
       VITE_DEMO_PASSWORD_HASH: ${{ vars.DEMO_PASSWORD_HASH || 'aa2b8937d3748dfc2d038786e9d4483992833d19066509cf504d783321b41bdf' }}
       VITE_DEMO_DAYS: '30'
+      # Entrar com Google: Client ID público (variável GOOGLE_CLIENT_ID). PHONE_LOGIN=false esconde o
+      # login pelo celular enquanto não houver envio do código por WhatsApp/SMS.
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+      VITE_PHONE_LOGIN: ${{ vars.PHONE_LOGIN || 'true' }}
     steps:
       - uses: actions/checkout@v4
 

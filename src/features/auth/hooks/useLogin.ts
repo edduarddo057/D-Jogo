@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { meKeys } from '@/features/profile';
 import { useSessionStore } from '@/stores';
-import { requestOtp, verifyOtp, type OtpChannel } from '../api/authApi';
+import { requestOtp, signInWithGoogle, verifyOtp, type AuthSession, type OtpChannel } from '../api/authApi';
 import { useLoginStore } from '../stores/loginStore';
 
 export function useRequestOtp() {
@@ -19,23 +19,38 @@ export function useRequestOtp() {
  * O destino vai para a store antes da sessão, e o GuestOnly faz o redirecionamento.
  */
 export function useVerifyOtp() {
-  const queryClient = useQueryClient();
+  const onSession = useOpenSession();
   return useMutation({
     mutationFn: ({ challengeId, code }: { challengeId: string; code: string }) => verifyOtp(challengeId, code),
     meta: { silent: true },
-    onSuccess: (session) => {
-      const store = useSessionStore.getState();
-      const invite = store.pendingInviteCode;
-      // Celular → Código → Perfil (manual 3.1). Com convite e perfil pronto, aceita e cai em Jogos.
-      const target = !session.user.profileCompleted
-        ? '/entrar/perfil'
-        : invite
-          ? `/convite/${invite}?aceitar=1`
-          : (store.redirectTo ?? '/');
-      queryClient.setQueryData(meKeys.me, session.user);
-      store.setRedirectTo(target);
-      useLoginStore.getState().clear();
-      store.setSession(session.accessToken);
-    },
+    onSuccess: onSession,
   });
+}
+
+/** Entrar com Google: mesma sessão e mesmos destinos do login pelo código. */
+export function useGoogleSignIn() {
+  const onSession = useOpenSession();
+  return useMutation({
+    mutationFn: (credential: string) => signInWithGoogle(credential),
+    meta: { silent: true },
+    onSuccess: onSession,
+  });
+}
+
+function useOpenSession() {
+  const queryClient = useQueryClient();
+  return (session: AuthSession) => {
+    const store = useSessionStore.getState();
+    const invite = store.pendingInviteCode;
+    // Celular → Código → Perfil (manual 3.1). Com convite e perfil pronto, aceita e cai em Jogos.
+    const target = !session.user.profileCompleted
+      ? '/entrar/perfil'
+      : invite
+        ? `/convite/${invite}?aceitar=1`
+        : (store.redirectTo ?? '/');
+    queryClient.setQueryData(meKeys.me, session.user);
+    store.setRedirectTo(target);
+    useLoginStore.getState().clear();
+    store.setSession(session.accessToken);
+  };
 }

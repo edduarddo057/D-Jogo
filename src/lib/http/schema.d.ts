@@ -38,6 +38,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Entra com a conta Google (ID token do Google Identity Services)
+         * @description O app recebe o `credential` (ID token) do botão do Google e manda aqui. A API confere a
+         *     assinatura, o emissor e o Client ID; conta nova nasce com perfil incompleto e sem celular,
+         *     que é pedido no onboarding (RN-02).
+         */
+        post: operations["signInWithGoogle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/refresh": {
         parameters: {
             query?: never;
@@ -87,7 +109,11 @@ export interface paths {
         delete: operations["deleteAccount"];
         options?: never;
         head?: never;
-        /** Edita nome, nickname e gênero */
+        /**
+         * Edita nome, nickname, gênero e o celular de contato
+         * @description `phone` só muda por aqui em conta que entra pelo Google (celular de contato, sem código);
+         *     quem entra pelo celular troca o número em /me/phone/otp (RN-06).
+         */
         patch: operations["updateMe"];
         trace?: never;
     };
@@ -1236,7 +1262,10 @@ export interface components {
         };
         Me: {
             id: string;
-            phone: components["schemas"]["Phone"];
+            /** @description null = conta do Google que ainda não informou o celular. */
+            phone: components["schemas"]["Phone"] | null;
+            /** @description E-mail da conta Google */
+            email?: string | null;
             name: string;
             nickname: string;
             /** Format: uri */
@@ -2110,6 +2139,34 @@ export interface operations {
             422: components["responses"]["BusinessRuleError"];
         };
     };
+    signInWithGoogle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    credential: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sessão aberta, igual ao login por código. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthSession"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthenticated"];
+        };
+    };
     refreshSession: {
         parameters: {
             query?: never;
@@ -2206,6 +2263,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    phone?: components["schemas"]["Phone"];
                     name?: components["schemas"]["PersonName"];
                     nickname?: components["schemas"]["Nickname"];
                     gender?: components["schemas"]["Gender"] | null;
@@ -2242,6 +2300,8 @@ export interface operations {
                     gender?: components["schemas"]["Gender"] | null;
                     /** @example 2026-11 */
                     acceptedTermsVersion: string;
+                    /** @description Celular de contato; obrigatório quando a conta ainda não tem (entrou pelo Google). */
+                    phone?: components["schemas"]["Phone"];
                     /** @description Convite a aceitar ao terminar (fluxo de convite sem login). */
                     inviteCode?: string;
                 };
