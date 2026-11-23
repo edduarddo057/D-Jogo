@@ -1,55 +1,26 @@
-import { Presentation } from 'lucide-react';
-import { useState } from 'react';
-import { ConfirmSheet } from '@/components/Sheet';
+import { ArrowLeft, Presentation } from 'lucide-react';
 import { formatDay } from '@/lib/format';
-import { getDemo, leaveDemo } from '@/lib/demo';
+import { exitDemoToApp, getDemo } from '@/lib/demo';
 import { demoMode } from '../enableMocks';
 import styles from './DemoBanner.module.css';
-import { appUrl } from '@/lib/config';
-
-/** Sai da demonstração sem apagar nada e volta para /demo (o app recarrega sem os mocks). */
-function exitDemo() {
-  leaveDemo();
-  window.location.assign(appUrl('demo'));
-}
 
 /**
  * Faixa fixa do modo demonstração: deixa claro que é uma demo, até quando os dados ficam salvos neste
- * aparelho, e dá a saída (que não apaga nada: dá para voltar por /demo e consultar).
+ * aparelho, e volta ao app oficial com um toque (não apaga nada: dá para voltar pelo Perfil).
  */
 export function DemoBanner() {
-  const [confirm, setConfirm] = useState(false);
   const demo = getDemo();
   if (!demoMode || !demo) return null;
-  const until = formatDay(demo.expiresAt);
   return (
-    <>
-      <div className={styles.banner} role="status">
-        <Presentation size={18} aria-hidden="true" />
-        <span className={styles.text}>
-          <b>Demonstração</b> · salva até {until}
-        </span>
-        <button type="button" className={styles.exit} onClick={() => setConfirm(true)}>
-          Sair
-        </button>
-      </div>
-      <ConfirmSheet
-        open={confirm}
-        onClose={() => setConfirm(false)}
-        title="Sair da demonstração?"
-        tone="primary"
-        leading={
-          <span className={styles.icon} aria-hidden="true">
-            <Presentation size={28} />
-          </span>
-        }
-        consequences={[
-          `O que você fez continua salvo neste aparelho até ${until}.`,
-          'Para voltar e consultar, entre de novo em /demo com a senha.',
-        ]}
-        actionLabel="Sair da demonstração"
-        onConfirm={exitDemo}
-      />
-    </>
+    <div className={styles.banner} role="status">
+      <Presentation size={18} aria-hidden="true" />
+      <span className={styles.text}>
+        <b>Demonstração</b> · salva até {formatDay(demo.expiresAt)}
+      </span>
+      <button type="button" className={styles.exit} onClick={exitDemoToApp}>
+        <ArrowLeft size={16} aria-hidden="true" />
+        Voltar ao app
+      </button>
+    </div>
   );
 }

@@ -18,24 +18,17 @@
 }
 
 .exit {
+  display: inline-flex;
   flex: none;
+  gap: var(--space-1);
+  align-items: center;
   min-height: 4.4rem;
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: inherit;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text);
   font: 700 1.4rem / 2rem var(--font-sans);
-  text-decoration: underline;
   cursor: pointer;
 }
 
-.icon {
-  display: grid;
-  place-items: center;
-  width: 6.4rem;
-  height: 6.4rem;
-  border-radius: var(--radius-full);
-  background: var(--color-info-bg);
-  color: var(--color-info-text);
-}

@@ -8,12 +8,12 @@
     <title>Dá Jogo</title>
 
     <!-- Aplica o tema antes da primeira pintura (script síncrono e pequeno, ver public/theme-init.js) -->
-    <script src="/theme-init.js"></script>
-    <link rel="stylesheet" href="/splash.css" />
+    <script src="/theme-init.js?v=%APP_BUILD%"></script>
+    <link rel="stylesheet" href="/splash.css?v=%APP_BUILD%" />
 
-    <!-- ?v=2: marca nova (símbolo "D"); força navegadores e apps a baixarem os ícones de novo -->
-    <link rel="icon" href="/favicon-32x32.png?v=2" sizes="32x32" type="image/png" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2" />
+    <!-- ?v=%APP_BUILD%: o commit do build; cada deploy pede os arquivos de public/ de novo -->
+    <link rel="icon" href="/favicon-32x32.png?v=%APP_BUILD%" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=%APP_BUILD%" />
 
     <!-- Prévia do link (WhatsApp, iMessage, Telegram, redes): imagem em public/og-image.png -->
     <meta property="og:type" content="website" />
@@ -22,13 +22,13 @@
     <meta property="og:title" content="Dá Jogo" />
     <meta property="og:description" content="Todo esporte fica melhor quando Dá Jogo. Lista, Pix e times sorteados num lugar só." />
     <meta property="og:url" content="%VITE_APP_URL%/" />
-    <meta property="og:image" content="%VITE_APP_URL%/og-image.png?v=3" />
+    <meta property="og:image" content="%VITE_APP_URL%/og-image.png?v=%APP_BUILD%" />
     <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Símbolo do Dá Jogo e o slogan: Todo esporte fica melhor quando Dá Jogo." />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="%VITE_APP_URL%/og-image.png?v=3" />
+    <meta name="twitter:image" content="%VITE_APP_URL%/og-image.png?v=%APP_BUILD%" />
 
     <!-- Instalado na tela inicial (iOS) -->
     <meta name="mobile-web-app-capable" content="yes" />
@@ -42,11 +42,11 @@
          imagens carregam (public/theme-init.js) e sai no fim (src/app/splash.ts). -->
     <div id="splash" class="splash" role="status" aria-label="Abrindo o Dá Jogo">
       <div class="splash-mark">
-        <img class="p p-swoosh" src="/brand/splash/swoosh.png" alt="" width="914" height="656" />
-        <img class="p p-bowl" src="/brand/splash/bowl.png" alt="" width="914" height="656" />
-        <img class="p p-bar" src="/brand/splash/bar.png" alt="" width="914" height="656" />
-        <img class="p p-runner" src="/brand/splash/runner.png" alt="" width="914" height="656" />
-        <img class="p p-ball" src="/brand/splash/ball.png" alt="" width="914" height="656" />
+        <img class="p p-swoosh" src="/brand/splash/swoosh.png?v=%APP_BUILD%" alt="" width="914" height="656" />
+        <img class="p p-bowl" src="/brand/splash/bowl.png?v=%APP_BUILD%" alt="" width="914" height="656" />
+        <img class="p p-bar" src="/brand/splash/bar.png?v=%APP_BUILD%" alt="" width="914" height="656" />
+        <img class="p p-runner" src="/brand/splash/runner.png?v=%APP_BUILD%" alt="" width="914" height="656" />
+        <img class="p p-ball" src="/brand/splash/ball.png?v=%APP_BUILD%" alt="" width="914" height="656" />
         <span class="splash-ring" aria-hidden="true"></span>
       </div>
       <p class="splash-word" aria-hidden="true">Dá <span>Jogo</span></p>

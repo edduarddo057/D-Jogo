@@ -1,4 +1,4 @@
-import { Settings } from 'lucide-react';
+import { ArrowLeft, Presentation, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
@@ -8,15 +8,17 @@ import { List, ListItem } from '@/components/List';
 import { fromState, PageTitle } from '@/components/NavBar';
 import { Section } from '@/components/Section';
 import { SegmentedControl } from '@/components/SegmentedControl';
-import { Sheet, useSheetParam } from '@/components/Sheet';
+import { ConfirmSheet, Sheet, useSheetParam } from '@/components/Sheet';
 import { Skeleton, SkeletonList } from '@/components/Skeleton';
 import { Stats } from '@/components/Stats';
 import { useMyGroups } from '@/features/groups';
 import { gameState, useMyMatches, type MatchSummary } from '@/features/matches';
 import { useMyPayments, type Payment } from '@/features/payments';
 import { ProfileForm, positionLabels, useMe, useMyStats, useSports } from '@/features/profile';
+import { DEMO_DAYS, demoConfigured, enterDemo, exitDemoToApp, isDemoActive } from '@/lib/demo';
 import { formatDay, formatMoneyShort, formatWhen, monthName } from '@/lib/format';
-import { toast } from '@/stores';
+import { APP_BUILD, APP_BUILT_AT, APP_VERSION } from '@/lib/config';
+import { toast, usePwaStore } from '@/stores';
 import { historyLine } from '../shared/history';
 import { InstallRow } from '../shared/InstallApp';
 import styles from './YouPage.module.css';
@@ -92,7 +94,9 @@ export function YouPage() {
           linkState={FROM}
         />
         <InstallRow />
+        <DemoRow />
       </List>
+      <AppVersion />
 
       <Sheet
         open={edit.isOpen}
@@ -224,5 +228,64 @@ function PaymentsHistory() {
         </List>
       )}
     </Section>
+  );
+}
+
+/**
+ * Demonstração a partir do Perfil: quem tem conta entra sem a senha de /demo. Dentro da demo, o
+ * mesmo lugar volta ao app oficial (como a faixa do topo).
+ */
+function DemoRow() {
+  const sheet = useSheetParam('demonstracao');
+  if (isDemoActive())
+    return (
+      <ListItem
+        leading={<ArrowLeft size={22} aria-hidden="true" />}
+        title="Voltar ao app"
+        meta="Sai da demonstração; ela fica salva neste aparelho"
+        onClick={exitDemoToApp}
+      />
+    );
+  if (!demoConfigured()) return null;
+  return (
+    <>
+      <ListItem
+        leading={<Presentation size={22} aria-hidden="true" />}
+        title="Ver a demonstração"
+        meta="Turma de exemplo para testar à vontade"
+        onClick={() => sheet.open()}
+      />
+      <ConfirmSheet
+        open={sheet.isOpen}
+        onClose={() => sheet.close()}
+        title="Abrir a demonstração?"
+        tone="primary"
+        consequences={[
+          'Abre uma turma de exemplo, com jogadores e um jogo hoje, para testar tudo.',
+          `Seus dados reais não mudam: a demonstração fica só neste aparelho, por ${DEMO_DAYS} dias.`,
+          'Para voltar, toque em “Voltar ao app” na faixa do topo.',
+        ]}
+        actionLabel="Abrir a demonstração"
+        onConfirm={enterDemo}
+      />
+    </>
+  );
+}
+
+/** Versão instalada neste aparelho (package.json + commit do build); com versão nova esperando, atualiza. */
+function AppVersion() {
+  const update = usePwaStore((s) => (s.updateAvailable ? s.applyUpdate : null));
+  const built = new Date(APP_BUILT_AT).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return (
+    <footer className={styles.version}>
+      <p>
+        Dá Jogo {APP_VERSION} · versão {APP_BUILD} · {built}
+      </p>
+      {update && (
+        <Button size="sm" variant="tint" onClick={() => void update()}>
+          Atualizar agora
+        </Button>
+      )}
+    </footer>
   );
 }

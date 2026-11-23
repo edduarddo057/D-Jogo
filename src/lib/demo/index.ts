@@ -71,6 +71,21 @@ export function leaveDemo() {
   if (state) write({ ...state, active: false });
 }
 
+/**
+ * Entra na demo a partir do app (Perfil): quem já tem conta não precisa da senha de /demo. O app
+ * recarrega com os mocks; a sessão real fica guardada no cookie e volta ao sair.
+ */
+export function enterDemo() {
+  startDemo();
+  window.location.assign(import.meta.env.BASE_URL);
+}
+
+/** Volta ao app oficial: desliga a demo (os dados dela ficam salvos) e recarrega sem os mocks. */
+export function exitDemoToApp() {
+  leaveDemo();
+  window.location.assign(import.meta.env.BASE_URL);
+}
+
 /** Apaga tudo da demo deste aparelho. */
 export function clearDemo() {
   localStorage.removeItem(DEMO_KEY);

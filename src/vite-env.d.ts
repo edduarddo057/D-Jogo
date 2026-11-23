@@ -18,6 +18,11 @@ interface ImportMetaEnv {
   readonly VITE_PHONE_LOGIN?: string;
 }
 
+/** Versão do app (package.json), commit do build e quando foi gerado (vite.config.ts). */
+declare const __APP_VERSION__: string;
+declare const __APP_BUILD__: string;
+declare const __APP_BUILT_AT__: string;
+
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }

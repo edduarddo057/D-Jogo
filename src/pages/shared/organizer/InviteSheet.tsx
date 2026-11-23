@@ -53,7 +53,8 @@ export function InviteSheet({ open, onClose, group, game, title = 'Convidar' }: 
     if (!invite) return;
     const text = inviteMessage(group.name, invite);
     try {
-      if (navigator.share) await navigator.share({ title: group.name, text, url: invite.url });
+      // só o texto: ele já termina com o link. Mandar `url` também faz o WhatsApp repetir o link.
+      if (navigator.share) await navigator.share({ title: group.name, text });
       else window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
     } catch {
       /* cancelado */

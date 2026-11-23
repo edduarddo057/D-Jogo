@@ -1,3 +1,5 @@
+import { execSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath, URL } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { msw } from 'msw/vite';
@@ -6,6 +8,22 @@ import { defineConfig } from 'vitest/config';
 
 // GitHub Pages publica em https://<usuário>.github.io/D-Jogo/ (uma subpasta). Dev e testes ficam na raiz.
 // Hospedagem na raiz do domínio (Vercel, Netlify, Cloudflare): BASE_PATH=/ pnpm build
+/**
+ * Versão de cada build: a do package.json + o commit (GITHUB_SHA no CI). Vai para o código (Perfil)
+ * e para os arquivos sem hash no nome (?v=), para nenhum navegador misturar arquivos de dois deploys.
+ */
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
+function commit(): string {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+  try {
+    return execSync('git rev-parse --short=7 HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+  } catch {
+    return 'local';
+  }
+}
+const APP_BUILD = commit();
+const APP_BUILT_AT = new Date().toISOString();
+
 export default defineConfig(({ command, isPreview }) => {
   // o preview (pnpm preview) serve o build: precisa da mesma base
   const base = command === 'build' || isPreview ? (process.env.BASE_PATH ?? '/D-Jogo/') : '/';
@@ -15,7 +33,17 @@ export default defineConfig(({ command, isPreview }) => {
     // msw/vite só serve o script do worker (/mockServiceWorker.js); quem liga os mocks é src/app/enableMocks.ts.
     // Vai sempre no build: o modo demonstração (/demo) liga os mocks em produção. O código dos mocks em si
     // só é baixado por quem entra na demo (import dinâmico).
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+      __APP_BUILD__: JSON.stringify(APP_BUILD),
+      __APP_BUILT_AT__: JSON.stringify(APP_BUILT_AT),
+    },
     plugins: [
+      // %APP_BUILD% no index.html (scripts, estilos e ícones de public/, que não têm hash no nome)
+      {
+        name: 'dajogo-app-version',
+        transformIndexHtml: { order: 'pre', handler: (html: string) => html.replaceAll('%APP_BUILD%', APP_BUILD) },
+      },
       react(),
       msw({ mode: 'worker-only' }),
       VitePWA({
@@ -42,9 +70,9 @@ export default defineConfig(({ command, isPreview }) => {
           handle_links: 'preferred',
           launch_handler: { client_mode: ['navigate-existing', 'auto'] },
           icons: [
-            { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-            { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: 'maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: `pwa-192x192.png?v=${APP_BUILD}`, sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: `pwa-512x512.png?v=${APP_BUILD}`, sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: `maskable-512x512.png?v=${APP_BUILD}`, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
@@ -58,6 +86,11 @@ export default defineConfig(({ command, isPreview }) => {
             new RegExp(`^${escapedBase}api/`),
           ],
           cleanupOutdatedCaches: true,
+          // versão nova assume na hora (src/app/pwa.ts decide quando recarregar a tela)
+          clientsClaim: true,
+          // ?v=<commit> (arquivos de public/) acha o arquivo do precache, que já é o desta versão;
+          // sem isso, offline o splash, os ícones e o logo não carregariam
+          ignoreURLParametersMatching: [/^v$/, /^utm_/, /^fbclid$/],
         },
         devOptions: { enabled: false },
       }),

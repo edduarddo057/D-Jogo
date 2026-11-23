@@ -28,10 +28,10 @@ import {
 } from '@/features/profile';
 import { formatE164Brazil, maskBrazilianPhone, toE164Brazil } from '@/lib/format';
 import { isApiError, messageFor } from '@/lib/http';
-import { isDemoActive, leaveDemo } from '@/lib/demo';
+import { exitDemoToApp, isDemoActive } from '@/lib/demo';
 import { toast, useThemeStore, type ThemePreference } from '@/stores';
 import styles from './SettingsPage.module.css';
-import { appUrl, PHONE_LOGIN } from '@/lib/config';
+import { PHONE_LOGIN } from '@/lib/config';
 
 const SWITCHES: Array<{ key: keyof NotificationSettings; title: string; detail: string }> = [
   { key: 'lists', title: 'Lista aberta e lembretes', detail: 'Quando abrir um jogo e se você não respondeu' },
@@ -121,10 +121,9 @@ export function SettingsPage() {
             tone="accent"
             title="Sair"
             onClick={() => {
-              // na demonstração, "Sair" sai da demo (sem apagar nada) e volta para /demo
+              // na demonstração, "Sair" volta ao app oficial (a demo fica salva)
               if (isDemoActive()) {
-                leaveDemo();
-                window.location.assign(appUrl('demo'));
+                exitDemoToApp();
                 return;
               }
               void signOut(queryClient).then(() => navigate('/entrar', { replace: true }));
