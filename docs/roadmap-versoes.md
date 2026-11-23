@@ -16,6 +16,8 @@ Legenda: ✅ feito · ⏭️ próxima · ⬜ pendente
 | 0.7.0 | Financeiro simples | Financeiro, Extrato, Mensalistas |
 | 0.8.0 | Perfil, cadastro e acabamento | Cadastro, Perfil, Seus dados |
 | 1.0.0 | Release candidate | Auditoria completa e documentação |
+| 2.0.0 | Manual de usabilidade (vôlei) | Todas |
+| 2.1.0 | Fundamentos, demonstração e acabamento | Placar, mural, estatísticas, demo |
 
 ---
 
@@ -129,6 +131,13 @@ Base: `Dá Jogo — Resumo de usabilidade (foco: vôlei)` e o protótipo `Dá Jo
 - **Contrato 0.3.0:** avisos e preferências, lembrar/cobrar/desfazer, recebi em mãos, estorno e CSV, trocar número, passar turma, repetir toda semana, abertura da lista, desistência tardia, números do Você, sorteio feito no aparelho.
 - **Testes:** fluxos novos de ponta a ponta (navegação, Jogos, Pix, detalhe, Avisos, Turmas, Você, convite, A resolver, Presença, Membros, Caixa, Novo jogo, Voltar, dia de jogo).
 
+### ✅ 2.1.0 — Fundamentos, demonstração e acabamento (23/11/2026)
+- **Fundamentos** no vôlei e **sorteio por fundamentos** (RN-17a, RN-103a); contrato 0.4.0.
+- **Modo demonstração** (`/demo`, com senha, sem conta, dados no aparelho por 30 dias).
+- **Placar** em tela cheia, travado e deitado, com quem fez cada ponto; **mural de honra** e **estatísticas**; time que mais ganhou no resumo.
+- Vários dias por turma, compartilhar a turma, nova marca e abertura animada, Perfil no lugar de Você.
+- Lista completa no [CHANGELOG](../CHANGELOG.md).
+
 ## Em aberto
-- Quais são as **habilidades** do critério de sorteio (fica desligado até definir).
+- Fundamentos das outras modalidades (futevôlei, futebol…): por enquanto só o vôlei tem.
 - Ranking entre dias (por enquanto tudo vale para um dia só).
